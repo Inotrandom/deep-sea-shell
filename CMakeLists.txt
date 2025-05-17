@@ -1,0 +1,3 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.28.3)
+PROJECT(DeepSeaShell)
+ADD_EXECUTABLE(DeepSeaShell "source/main.cpp")
