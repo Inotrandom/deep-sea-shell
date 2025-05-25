@@ -1,3 +1,10 @@
+/**
+ * This file contains useful functions as well as several important
+ * parts that DSS requires to function. If it is simply a small
+ * piece of DSS that does not directly contribute to the runtime
+ * function of DSS, then it likely belongs here.
+ */
+
 #include <vector>
 #include <string>
 #include <algorithm>
