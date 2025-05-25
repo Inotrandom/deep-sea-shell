@@ -5,6 +5,9 @@
  * function of DSS, then it likely belongs here.
  */
 
+#ifndef utils
+#define utils
+
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -166,3 +169,5 @@ public:
         res = this->delegate.call(args);
     }
 };
+
+#endif
