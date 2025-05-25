@@ -3,8 +3,32 @@
 #include <algorithm>
 #include <iterator>
 
+/**
+ * Splits a string into multiple substrings, separated by a delimiter.
+ * 
+ * @param s The input string to be operated over
+ * @param delimiter A delimiter to determine how tokens are separated
+ * 
+ * @returns A vector of substrings after having been separated by delimiter.
+ */
+inline std::vector<std::string> string_split(std::string& s, const std::string& delimiter) {
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+    std::string token;
+
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        tokens.push_back(token);
+        s.erase(0, (pos + delimiter.length()));
+    }
+    tokens.push_back(s);
+
+    return tokens;
+}
+
 typedef std::vector<std::string> DSSFuncArgs;
-typedef int (*DSSFunc)(DSSFuncArgs);
+typedef size_t (*DSSFunc)(DSSFuncArgs);
+typedef std::vector<size_t> DSSReturnType;
 
 /**
  * Function pointers are connected to the DSSDelegate,
@@ -21,6 +45,11 @@ class DSSDelegate
         std::vector<DSSFunc> connected;
     
     public:
+        inline DSSDelegate()
+        {
+            this->connected = {};
+        }
+
         /**
          * Connect a DSSFunc to the delegate.
          * 
@@ -69,9 +98,9 @@ class DSSDelegate
          * behavior will not appear in the vector, and as such, relying on the fact that the number
          * of returns will be consistent is unsafe.
          */
-        inline auto call(DSSFuncArgs args) -> std::vector<int>
+        inline auto call(DSSFuncArgs args) -> DSSReturnType
         {
-            std::vector<int> res = {};
+            DSSReturnType res = {};
 
             if (this == nullptr) {return res;}
 
@@ -81,5 +110,52 @@ class DSSDelegate
             }
 
             return res;
+        }
+};
+
+/**
+ * Consider that DSSCommands are essentially named DSSDelegates.
+ * 
+ * A DSSCommand has a name and a description. "Name" is the command's
+ * keyword, and "description" should contain a basic manual for the command's
+ * usage.
+ */
+class DSSCommand
+{
+    private:
+        DSSDelegate delegate;
+        std::string name;
+        std::string description;
+    
+    public:
+        inline DSSCommand(std::string name, std::string description)
+        {
+            this->delegate = DSSDelegate();
+            this->name = name;
+            this->description = description;
+        }
+
+        /**
+         * Lazily attempts to run this command if the keyword (first token)
+         * matches the command's "name"
+         * 
+         * @param inp The string command to be executed (should contain arguments)
+         * @param delim The separation between individual tokens in a command.
+         * 
+         * @return The result of calling the delegate associated with this command.
+         * Will return an empty vector if an error has occured;
+         * 
+         * @see DSSDelegate::call
+         */
+        inline auto parse_and_exec(std::string inp, std::string delim) -> DSSReturnType
+        {
+            DSSReturnType res = {};
+            
+            if (this == nullptr) {return res;}
+
+            std::vector<std::string> args = string_split(inp, delim);
+            args.erase(args.begin());
+
+            res = this->delegate.call(args);
         }
 };
