@@ -21,7 +21,7 @@
  * 
  * @returns A vector of substrings after having been separated by delimiter.
  */
-inline std::vector<std::string> string_split(std::string& s, const std::string& delimiter) {
+static inline std::vector<std::string> string_split(std::string& s, const std::string& delimiter) {
     std::vector<std::string> tokens;
     std::size_t pos = 0;
     std::string token;
@@ -68,10 +68,11 @@ typedef std::vector<DSSReturnType> DSSDelegateReturnType;
  * it is used for the case that a command might require
  * more than one function to be called. 
  */
+template<typename F>
 class Delegate
 {
 private:
-    std::vector<DSSFunc> connected;
+    std::vector<F> connected;
 
 public:
     inline Delegate()
@@ -88,7 +89,7 @@ public:
      * 
      * @param func The function pointer to connect to the delegate
      */
-    inline void connect(const DSSFunc func)
+    inline void connect(const F func)
     {
         if (this == nullptr) {return;}
 
@@ -102,7 +103,7 @@ public:
      * 
      * @param func The function pointer to attempt to disconnect from the delegate.
      */
-    inline void disconnect(const DSSFunc func)
+    inline void disconnect(const F func)
     {
         if (this == nullptr) {return;}
 
@@ -156,7 +157,7 @@ public:
 class Command
 {
 private:
-    Delegate delegate;
+    Delegate<DSSFunc> delegate;
     std::string name;
     std::string description;
     int64_t minimum_args;
@@ -175,7 +176,7 @@ public:
      */
     inline Command(std::string name, std::string description, int64_t minimum_args = -1, int64_t maximum_args = -1)
     {
-        this->delegate = Delegate();
+        this->delegate = Delegate<DSSFunc>();
         this->name = name;
         this->description = description;
         this->minimum_args = minimum_args;
