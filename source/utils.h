@@ -163,6 +163,16 @@ private:
     int64_t maximum_args;
 
 public:
+    /**
+     * @param name Keyword for the command. This will determine
+     * what token invokes this command.
+     * 
+     * @param description The manual for the command.
+     * 
+     * @param minimum_args The minimum expected arguments for the command. (optional)
+     * 
+     * @param maximum_args The maximum of arguments expected for the command. (optional)
+     */
     inline Command(std::string name, std::string description, int64_t minimum_args = -1, int64_t maximum_args = -1)
     {
         this->delegate = Delegate();
@@ -184,13 +194,16 @@ public:
      * 
      * @see DSSDelegate::call
      */
-    inline auto parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
+    inline auto attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
     {
         DSSDelegateReturnType res = {};
         
         if (this == nullptr) {return res;}
 
         std::vector<std::string> args = string_split(inp, delim);
+
+        if (args[0] != this->name) {return res;}
+
         args.erase(args.begin());
 
         std::size_t arg_count = args.size();
