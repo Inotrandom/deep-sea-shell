@@ -13,11 +13,18 @@
  */
 
 #include <iostream>
-#include "utils.h"
+#include "runtime.h"
+#include "lang.h"
 
 int main(int argv, char** argc)
 {
-    std::cout << "Hello, world!";
+    runtime::Environment env = runtime::Environment();
+    env.connect_command_definer(lang::definer);
+
+    env.exec(
+        "out Hello, world!"
+        "\nout That's not nice..."
+    );
 
     return 0;
 }
