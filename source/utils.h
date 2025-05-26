@@ -72,12 +72,12 @@ template<typename F, typename A, typename R>
 class Delegate
 {
 private:
-    std::vector<F> connected;
+    std::vector<F> m_connected;
 
 public:
-    inline Delegate()
+    Delegate()
     {
-        this->connected = {};
+        m_connected = {};
     }
 
     /**
@@ -89,11 +89,11 @@ public:
      * 
      * @param func The function pointer to connect to the delegate
      */
-    inline void connect(const F func)
+    void connect(const F func)
     {
         if (this == nullptr) {return;}
 
-        this->connected.push_back(func);
+        m_connected.push_back(func);
     }
 
     /**
@@ -103,14 +103,14 @@ public:
      * 
      * @param func The function pointer to attempt to disconnect from the delegate.
      */
-    inline void disconnect(const F func)
+    void disconnect(const F func)
     {
         if (this == nullptr) {return;}
 
-        const auto found = std::find(this->connected.begin(), this->connected.end(), func);
+        const auto found = std::find(m_connected.begin(), m_connected.end(), func);
         
-        if (found == this->connected.end()) {return;}
-        this->connected.erase(found);
+        if (found == m_connected.end()) {return;}
+        m_connected.erase(found);
     }
 
     /**
@@ -134,7 +134,7 @@ public:
 
         if (this == nullptr) {return res;}
 
-        for (auto func : this->connected)
+        for (auto func : m_connected)
         {
             res.push_back(func(arg));
         }
@@ -144,7 +144,7 @@ public:
 };
 
 /**
- * Consider that DSS Commands are essentially named DSSDelegates.
+ * Consider that DSS Commands are essentially named Delegates.
  * 
  * A DSS Command has a name and a description. "Name" is the command's
  * keyword, and "description" should contain a basic manual for the command's
@@ -157,11 +157,11 @@ public:
 class Command
 {
 private:
-    Delegate<DSSFunc> delegate;
-    std::string name;
-    std::string description;
-    int64_t minimum_args;
-    int64_t maximum_args;
+    Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate;
+    std::string m_name;
+    std::string m_description;
+    int64_t m_minimum_args;
+    int64_t m_maximum_args;
 
 public:
     /**
@@ -174,13 +174,20 @@ public:
      * 
      * @param maximum_args The maximum of arguments expected for the command. (optional)
      */
-    inline Command(std::string name, std::string description, int64_t minimum_args = -1, int64_t maximum_args = -1)
+    Command(
+        DSSFunc func,
+        std::string name,
+        std::string description,
+        int64_t minimum_args = -1,
+        int64_t maximum_args = -1
+    )
     {
-        this->delegate = Delegate<DSSFunc>();
-        this->name = name;
-        this->description = description;
-        this->minimum_args = minimum_args;
-        this->maximum_args = maximum_args;
+        //m_delegate = Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType>();
+        m_name = name;
+        m_delegate.connect(func);
+        m_description = description;
+        m_minimum_args = minimum_args;
+        m_maximum_args = maximum_args;
     }
 
     /**
@@ -195,24 +202,24 @@ public:
      * 
      * @see DSSDelegate::call
      */
-    inline auto attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
+    auto attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
     {
         DSSDelegateReturnType res = {};
         
         if (this == nullptr) {return res;}
 
-        std::vector<std::string> args = string_split(inp, delim);
+        std::vector<std::string> tokens = string_split(inp, delim);
+        
+        if (tokens[0] != m_name) {return res;}
 
-        if (args[0] != this->name) {return res;}
+        tokens.erase(tokens.begin());
 
-        args.erase(args.begin());
+        std::size_t arg_count = tokens.size();
 
-        std::size_t arg_count = args.size();
+        //if (arg_count < m_minimum_args) {return res;}
+        //if (m_maximum_args > -1 && arg_count > m_maximum_args) {return res;}
 
-        if (arg_count < this->minimum_args) {return res;}
-        if (this->maximum_args != -1 && arg_count > maximum_args) {return res;}
-
-        res = this->delegate.call(args);
+        res = m_delegate.call(tokens);
         return res;
     }
 };
