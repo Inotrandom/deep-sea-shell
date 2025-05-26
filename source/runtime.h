@@ -32,16 +32,16 @@ namespace key
 class Task
 {
 private:
-    std::string script;
+    std::string m_script;
 public:
     inline Task(const std::string script)
     {
-        this->script = script;
+        m_script = script;
     }
 
     inline auto get_script() -> std::string
     {
-        return this->script;
+        return m_script;
     }
 };
 
@@ -61,30 +61,30 @@ private:
      * Every command currently working for this
      * particular "pass" of execution
      */
-    std::vector<utils::Command> loaded_commands;
+    std::vector<utils::Command> m_loaded_commands;
 
     /**
      * Any user-defined preprocessor definers
      */
-    DefinerDelegate additional_preprocessors;
+    DefinerDelegate m_additional_preprocessors;
 
     /**
      * Any user-defined command definers
      */
-    DefinerDelegate additional_commands;
+    DefinerDelegate m_additional_commands;
 
     /**
      * Every single task that this environment
      * has yet to complete or is in the process
      * of completing
      */
-    std::vector<Task> tasks;
+    std::vector<Task> m_tasks;
 
     /**
      * Whether or not the environment is actively
      * completing tasks.
      */
-    bool busy;
+    bool m_busy;
 
     /**
      * Directly executes a script.
@@ -99,7 +99,7 @@ private:
     {
         for (auto statement : statements)
         {
-            for (auto command : this->loaded_commands)
+            for (auto command : m_loaded_commands)
             {
                 command.attempt_parse_and_exec(statement, key::TOKEN_DELIM);
             }
@@ -118,7 +118,7 @@ private:
     inline void command_pass(DefinerDelegate definer, utils::DSSFuncArgs statements)
     {
         if (this == nullptr) {return;}
-        this->loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
+        m_loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
         definer.call(this);
 
         direct_exec(statements);
@@ -142,8 +142,8 @@ private:
         std::string script = task.get_script();
         std::vector<std::string> to_commands = string_split(script, key::MULTILINE_DELIM);
 
-        command_pass(additional_preprocessors, to_commands);
-        command_pass(additional_commands, to_commands);
+        command_pass(m_additional_preprocessors, to_commands);
+        command_pass(m_additional_commands, to_commands);
 
         return 0;
     }
@@ -162,20 +162,20 @@ private:
         utils::DSSDelegateReturnType res = {};
 
         if (this == nullptr) {return res;}
-        if (this->tasks.size() == 0) {return res;}
-        if (this->busy == true) {return res;}
-        this->busy = true;
+        if (m_tasks.size() == 0) {return res;}
+        if (m_busy == true) {return res;}
+        m_busy = true;
 
-        for (auto task : this->tasks)
+        for (auto task : m_tasks)
         {
-            this->exec_task(task);
+            exec_task(task);
         }
         
-        this->tasks.clear();
-        this->busy = false;
+        m_tasks.clear();
+        m_busy = false;
         if (recursive == true)
         {
-            this->exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION);
+            exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION);
         }
 
         return res;
@@ -183,22 +183,22 @@ private:
 public:
     inline Environment()
     {
-        this->loaded_commands = {};
-        this->additional_preprocessors = DefinerDelegate();
-        this->additional_commands = DefinerDelegate();
-        this->tasks = {};
+        m_loaded_commands = {};
+        m_additional_preprocessors = DefinerDelegate();
+        m_additional_commands = DefinerDelegate();
+        m_tasks = {};
     }
 
     inline void connect_preprocessor_definer(const Definer func)
     {
         if (this == nullptr) {return;}
-        this->additional_preprocessors.connect(func);
+        m_additional_preprocessors.connect(func);
     }
 
     inline void connect_command_definer(const Definer func)
     {
         if (this == nullptr) {return;}
-        this->additional_commands.connect(func);
+        m_additional_commands.connect(func);
     }
 
     inline void define_command(
@@ -212,7 +212,7 @@ public:
         if (this == nullptr) {return;}
 
         utils::Command res = utils::Command(func, name, description, minimum_args, maximum_args);
-        this->loaded_commands.push_back(res);
+        m_loaded_commands.push_back(res);
     }
 
     inline void exec(std::string script)
@@ -220,8 +220,8 @@ public:
         if (this == nullptr) {return;}
 
         Task task = Task(script);
-        this->tasks.push_back(task); // Append a task to the task list
-        this->exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
+        m_tasks.push_back(task); // Append a task to the task list
+        exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
     }
 };
 
