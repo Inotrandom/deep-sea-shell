@@ -68,7 +68,7 @@ typedef std::vector<DSSReturnType> DSSDelegateReturnType;
  * it is used for the case that a command might require
  * more than one function to be called. 
  */
-template<typename F>
+template<typename F, typename A, typename R>
 class Delegate
 {
 private:
@@ -121,22 +121,22 @@ public:
      * (in the order that they were connected- the most recently connected
      * will be executed last.)
      * 
-     * @param args A vector of string arguments to be passed into every connected function
+     * @param arg An argument to be copied for each function
      * 
      * @return A vector of integers representing status from each function, in corresponding order
      * to the `connected` member. Note: this vector will be empty if this function errors. Undefined
      * behavior will not appear in the vector, and as such, relying on the fact that the number
      * of returns will be consistent is unsafe.
      */
-    inline auto call(DSSFuncArgs args) -> DSSDelegateReturnType
+    auto call(A arg) -> R
     {
-        DSSDelegateReturnType res = {};
+        R res;
 
         if (this == nullptr) {return res;}
 
         for (auto func : this->connected)
         {
-            res.push_back(func(args));
+            res.push_back(func(arg));
         }
 
         return res;
