@@ -36,9 +36,28 @@ inline std::vector<std::string> string_split(std::string& s, const std::string& 
     return tokens;
 }
 
+/**
+ * Arguments to functions connected to delegates
+ */
 typedef std::vector<std::string> DSSFuncArgs;
-typedef size_t (*DSSFunc)(DSSFuncArgs);
-typedef std::vector<size_t> DSSReturnType;
+
+/**
+ * Return type of functions connected to delegates
+ */
+typedef size_t DSSReturnType;
+
+/**
+ * Typing of function pointers that should be
+ * passed onto delegates
+ */
+typedef DSSReturnType (*DSSFunc)(DSSFuncArgs);
+
+/**
+ * Return type of DSSDelegate::call and any other
+ * functions that pass this result down the 
+ * pipeline
+ */
+typedef std::vector<DSSReturnType> DSSDelegateReturnType;
 
 /**
  * Function pointers are connected to the DSSDelegate,
@@ -108,9 +127,9 @@ public:
      * behavior will not appear in the vector, and as such, relying on the fact that the number
      * of returns will be consistent is unsafe.
      */
-    inline auto call(DSSFuncArgs args) -> DSSReturnType
+    inline auto call(DSSFuncArgs args) -> DSSDelegateReturnType
     {
-        DSSReturnType res = {};
+        DSSDelegateReturnType res = {};
 
         if (this == nullptr) {return res;}
 
@@ -157,9 +176,9 @@ public:
      * 
      * @see DSSDelegate::call
      */
-    inline auto parse_and_exec(std::string inp, std::string delim) -> DSSReturnType
+    inline auto parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
     {
-        DSSReturnType res = {};
+        DSSDelegateReturnType res = {};
         
         if (this == nullptr) {return res;}
 
