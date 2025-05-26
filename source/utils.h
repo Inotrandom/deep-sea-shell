@@ -23,7 +23,7 @@
  */
 inline std::vector<std::string> string_split(std::string& s, const std::string& delimiter) {
     std::vector<std::string> tokens;
-    size_t pos = 0;
+    std::size_t pos = 0;
     std::string token;
 
     while ((pos = s.find(delimiter)) != std::string::npos) {
@@ -44,7 +44,7 @@ typedef std::vector<std::string> DSSFuncArgs;
 /**
  * Return type of functions connected to delegates
  */
-typedef size_t DSSReturnType;
+typedef std::size_t DSSReturnType;
 
 /**
  * Typing of function pointers that should be
@@ -148,6 +148,10 @@ public:
  * A DSSCommand has a name and a description. "Name" is the command's
  * keyword, and "description" should contain a basic manual for the command's
  * usage.
+ * 
+ * @note DSS Commands are fluid- they are defined and deleted at run time.
+ * Assume that no value will be constant, as the command may be constructed
+ * at arbitrary times.
  */
 class DSSCommand
 {
@@ -155,13 +159,17 @@ private:
     DSSDelegate delegate;
     std::string name;
     std::string description;
+    int64_t minimum_args;
+    int64_t maximum_args;
 
 public:
-    inline DSSCommand(std::string name, std::string description)
+    inline DSSCommand(std::string name, std::string description, int64_t minimum_args = -1, int64_t maximum_args = -1)
     {
         this->delegate = DSSDelegate();
         this->name = name;
         this->description = description;
+        this->minimum_args = minimum_args;
+        this->maximum_args = maximum_args;
     }
 
     /**
@@ -185,7 +193,13 @@ public:
         std::vector<std::string> args = string_split(inp, delim);
         args.erase(args.begin());
 
+        std::size_t arg_count = args.size();
+
+        if (arg_count < this->minimum_args) {return res;}
+        if (this->maximum_args != -1 && arg_count > maximum_args) {return res;}
+
         res = this->delegate.call(args);
+        return res;
     }
 };
 
