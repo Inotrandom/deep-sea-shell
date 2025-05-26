@@ -53,14 +53,14 @@ typedef std::size_t DSSReturnType;
 typedef DSSReturnType (*DSSFunc)(DSSFuncArgs);
 
 /**
- * Return type of DSSDelegate::call and any other
+ * Return type of Delegate::call and any other
  * functions that pass this result down the 
  * pipeline
  */
 typedef std::vector<DSSReturnType> DSSDelegateReturnType;
 
 /**
- * Function pointers are connected to the DSSDelegate,
+ * Function pointers are connected to the delegate,
  * which can be called with the same arguments.
  * 
  * This is sprinkled throughout the program, and is
@@ -68,13 +68,13 @@ typedef std::vector<DSSReturnType> DSSDelegateReturnType;
  * it is used for the case that a command might require
  * more than one function to be called. 
  */
-class DSSDelegate
+class Delegate
 {
 private:
     std::vector<DSSFunc> connected;
 
 public:
-    inline DSSDelegate()
+    inline Delegate()
     {
         this->connected = {};
     }
@@ -143,9 +143,9 @@ public:
 };
 
 /**
- * Consider that DSSCommands are essentially named DSSDelegates.
+ * Consider that DSS Commands are essentially named DSSDelegates.
  * 
- * A DSSCommand has a name and a description. "Name" is the command's
+ * A DSS Command has a name and a description. "Name" is the command's
  * keyword, and "description" should contain a basic manual for the command's
  * usage.
  * 
@@ -153,19 +153,19 @@ public:
  * Assume that no value will be constant, as the command may be constructed
  * at arbitrary times.
  */
-class DSSCommand
+class Command
 {
 private:
-    DSSDelegate delegate;
+    Delegate delegate;
     std::string name;
     std::string description;
     int64_t minimum_args;
     int64_t maximum_args;
 
 public:
-    inline DSSCommand(std::string name, std::string description, int64_t minimum_args = -1, int64_t maximum_args = -1)
+    inline Command(std::string name, std::string description, int64_t minimum_args = -1, int64_t maximum_args = -1)
     {
-        this->delegate = DSSDelegate();
+        this->delegate = Delegate();
         this->name = name;
         this->description = description;
         this->minimum_args = minimum_args;
