@@ -1,9 +1,7 @@
 /**
- * This file contains runtime utilities.
- * 
- * Most notably, the DSS environment and
- * constants. This file is essentially
- * "DSS."
+ * Within this file are DSS Runtime utilities.
+ * It is critical to include this file to
+ * use DSS.
  */
 #ifndef runtime
 #define runtime

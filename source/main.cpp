@@ -10,6 +10,9 @@
  * Grafting to DSS is a core language feature; producing your own organized commands
  * and namespaces is important to ensure the effectiveness of the language for your
  * specific needs.
+ * 
+ * Ideally, DSS should be placed into the main file of your codespace. This file
+ * is both an example and a starting point for using DSS.
  */
 
 #include <iostream>
