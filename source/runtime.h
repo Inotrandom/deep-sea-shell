@@ -169,7 +169,7 @@ private:
             exec_task(task);
         }
         
-        m_tasks.clear();
+        m_tasks.clear(); // All tasks are completed, whether successfully or not
         m_busy = false;
         if (recursive == true)
         {
@@ -179,6 +179,10 @@ private:
         return res;
     }
 public:
+    /**
+     * Produces a DSS environment, ready for executing
+     * commands.
+     */
     inline Environment()
     {
         m_loaded_commands = {};
@@ -187,18 +191,40 @@ public:
         m_tasks = {};
     }
 
+    /**
+     * Connect a preprocessor definer to the environment. Crucial
+     * if you intend to graft preprocessors onto DSS.
+     * 
+     * @param func A pointer to the definer function
+     * 
+     * @see Environment::connect_command_definer
+     */
     inline void connect_preprocessor_definer(const Definer func)
     {
         if (this == nullptr) {return;}
+        if (func == nullptr) {return;}
         m_additional_preprocessors.connect(func);
     }
 
+    /**
+     * Connect a command definer to the environment. Crucial
+     * if you intend to graft commands onto DSS.
+     * 
+     * @param fnuc A pointer to the definer function
+     * 
+     * @see Environment::connect_preprocessor_definer
+     */
     inline void connect_command_definer(const Definer func)
     {
         if (this == nullptr) {return;}
         m_additional_commands.connect(func);
     }
 
+    /**
+     * Directly defines a DSS command, whether it be a preprocessor
+     * or an ordinary command. Definer functions exist with the sole
+     * purpose of using this particular method.
+     */
     inline void define_command(
         utils::DSSFunc func,
         std::string name,
@@ -213,6 +239,16 @@ public:
         m_loaded_commands.push_back(res);
     }
 
+    /**
+     * Execute a DSS script. This is the
+     * intended solution for giving a DSS environment
+     * execution tasks.
+     * 
+     * When given input, the environment will create a task, then execute the task
+     * after it is finished with all previous (older) tasks.
+     * 
+     * @param script A string containing DSS script to execute
+     */
     inline void exec(std::string script)
     {
         if (this == nullptr) {return;}
