@@ -8,6 +8,95 @@
 
 #include "utils.h"
 #include <any>
+#include <optional>
+
+typedef int64_t RunID;
+
+class Executor;
+
+/**
+ * Consider that DSS Commands are essentially named Delegates.
+ * 
+ * A DSS Command has a name and a description. "Name" is the command's
+ * keyword, and "description" should contain a basic manual for the command's
+ * usage.
+ * 
+ * @note DSS Commands are fluid- they are defined and deleted at run time.
+ * Assume that no value will be constant, as the command may be constructed
+ * at arbitrary times.
+ */
+class Command
+{
+private:
+    Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate;
+    std::string m_name;
+    std::string m_description;
+    int64_t m_minimum_args;
+    int64_t m_maximum_args;
+    Executor* m_parent_env;
+
+public:
+    /**
+     * @param name Keyword for the command. This will determine
+     * what token invokes this command.
+     * 
+     * @param description The manual for the command.
+     * 
+     * @param minimum_args The minimum expected arguments for the command. (optional)
+     * 
+     * @param maximum_args The maximum of arguments expected for the command. (optional)
+     */
+    Command(
+        DSSFunc func,
+        std::string name,
+        std::string description,
+        int64_t minimum_args = -1,
+        int64_t maximum_args = -1,
+        Executor* parent_env = nullptr
+    )
+    {
+        //m_delegate = Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType>();
+        m_name = name;
+        m_delegate.connect(func);
+        m_description = description;
+        m_minimum_args = minimum_args;
+        m_maximum_args = maximum_args;
+        m_parent_env = parent_env;
+    }
+
+    /**
+     * Lazily attempts to run this command if the keyword (first token)
+     * matches the command's "name"
+     * 
+     * @param inp The string command to be executed (should contain arguments)
+     * @param delim The separation between individual tokens in a command.
+     * 
+     * @return The result of calling the delegate associated with this command.
+     * Will return an empty vector if an error has occured;
+     * 
+     * @see DSSDelegate::call
+     */
+    auto attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
+    {
+        DSSDelegateReturnType res = {};
+        
+        if (this == nullptr) {return res;}
+
+        std::vector<std::string> tokens = string_split(inp, delim);
+        
+        if (tokens[0] != m_name) {return res;}
+
+        tokens.erase(tokens.begin());
+
+        std::size_t arg_count = tokens.size();
+
+        //if (arg_count < m_minimum_args) {return res;}
+        //if (m_maximum_args > -1 && arg_count > m_maximum_args) {return res;}
+
+        res = m_delegate.call(tokens);
+        return res;
+    }
+};
 
 namespace err
 {
@@ -32,34 +121,31 @@ class Task
 private:
     std::string m_script;
 public:
-    inline Task(const std::string script)
+    Task(const std::string script)
     {
         m_script = script;
     }
 
-    inline auto get_script() -> std::string
+    auto get_script() -> std::string
     {
         return m_script;
     }
 };
 
-
-class Environment;
-
-typedef std::any (*Definer)(Environment*);
-typedef utils::Delegate<Definer, Environment*, std::vector<std::any>> DefinerDelegate;
+typedef std::any (*Definer)(Executor*);
+typedef utils::Delegate<Definer, Executor*, std::vector<std::any>> DefinerDelegate;
 
 /**
  * DSS execution environment. Accepts and executes tasks.
  */
-class Environment
+class Executor
 {
 private:
     /**
      * Every command currently working for this
      * particular "pass" of execution
      */
-    std::vector<utils::Command> m_loaded_commands;
+    std::vector<Command> m_loaded_commands;
 
     /**
      * Any user-defined preprocessor definers
@@ -84,6 +170,8 @@ private:
      */
     bool m_busy;
 
+    RunID m_id;
+
     /**
      * Directly executes a script.
      * 
@@ -91,9 +179,9 @@ private:
      * and this function is intended exclusively
      * for the internals of the interpreter.
      * 
-     * @see Environment::exec_task
+     * @see Executor::exec_task
      */
-    inline void direct_exec(utils::DSSFuncArgs statements)
+    void direct_exec(utils::DSSFuncArgs statements)
     {
         for (auto statement : statements)
         {
@@ -113,7 +201,7 @@ private:
      * @param statements A vector of individual command strings. These will
      * be further split into individual tokens by the command itself.
      */
-    inline void command_pass(DefinerDelegate definer, utils::DSSFuncArgs statements)
+    void command_pass(DefinerDelegate definer, utils::DSSFuncArgs statements)
     {
         if (this == nullptr) {return;}
         m_loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
@@ -131,7 +219,7 @@ private:
      * 
      * @return The result of executing the task.
      */
-    inline auto exec_task(Task task) -> utils::DSSReturnType
+    auto exec_task(Task task) -> utils::DSSReturnType
     {
         utils::DSSReturnType res = 1;
 
@@ -155,7 +243,7 @@ private:
      * @return A vector containing the result of 
      * execution for every single task.
      */
-    inline auto exec_all_tasks(bool recursive) -> utils::DSSDelegateReturnType
+    auto exec_all_tasks(bool recursive) -> utils::DSSDelegateReturnType
     {
         utils::DSSDelegateReturnType res = {};
 
@@ -180,44 +268,20 @@ private:
     }
 public:
     /**
-     * Produces a DSS environment, ready for executing
-     * commands.
+     * Produces a DSS executor.
+     * 
+     * @param id The unique RunID of this particular executor.
+     * @param additional_preprocessors Any additional preprocessor definers
+     * @param additional_commands Any additional command definers
      */
-    inline Environment()
+    Executor(RunID id, DefinerDelegate additional_preprocessors = DefinerDelegate(), DefinerDelegate additional_commands = DefinerDelegate())
     {
         m_loaded_commands = {};
-        m_additional_preprocessors = DefinerDelegate();
-        m_additional_commands = DefinerDelegate();
+        m_additional_preprocessors = additional_preprocessors;
+        m_additional_commands = additional_commands;
         m_tasks = {};
-    }
 
-    /**
-     * Connect a preprocessor definer to the environment. Crucial
-     * if you intend to graft preprocessors onto DSS.
-     * 
-     * @param func A pointer to the definer function
-     * 
-     * @see Environment::connect_command_definer
-     */
-    inline void connect_preprocessor_definer(const Definer func)
-    {
-        if (this == nullptr) {return;}
-        if (func == nullptr) {return;}
-        m_additional_preprocessors.connect(func);
-    }
-
-    /**
-     * Connect a command definer to the environment. Crucial
-     * if you intend to graft commands onto DSS.
-     * 
-     * @param fnuc A pointer to the definer function
-     * 
-     * @see Environment::connect_preprocessor_definer
-     */
-    inline void connect_command_definer(const Definer func)
-    {
-        if (this == nullptr) {return;}
-        m_additional_commands.connect(func);
+        m_id = id;
     }
 
     /**
@@ -225,7 +289,7 @@ public:
      * or an ordinary command. Definer functions exist with the sole
      * purpose of using this particular method.
      */
-    inline void define_command(
+    void define_command(
         utils::DSSFunc func,
         std::string name,
         std::string description,
@@ -235,7 +299,7 @@ public:
     {
         if (this == nullptr) {return;}
 
-        utils::Command res = utils::Command(func, name, description, minimum_args, maximum_args);
+        Command res = Command(func, name, description, minimum_args, maximum_args, this);
         m_loaded_commands.push_back(res);
     }
 
@@ -249,13 +313,101 @@ public:
      * 
      * @param script A string containing DSS script to execute
      */
-    inline void exec(std::string script)
+    void exec(std::string script)
     {
         if (this == nullptr) {return;}
 
         Task task = Task(script);
         m_tasks.push_back(task); // Append a task to the task list
         exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
+    }
+
+    RunID get_id()
+    {
+        return m_id;
+    }
+};
+
+class Environment
+{
+private:
+    RunID m_id_max;
+    std::vector<Executor> m_executors;
+    DefinerDelegate m_additional_preprocessors;
+    DefinerDelegate m_additional_commands;
+
+public:
+    Environment()
+    {
+        m_id_max = 0;
+    }
+
+    /**
+     * Connect a preprocessor definer to the environment. Crucial
+     * if you intend to graft preprocessors onto DSS.
+     * 
+     * @param func A pointer to the definer function
+     * 
+     * @see Executor::connect_command_definer
+     */
+    void connect_preprocessor_definer(const Definer func)
+    {
+        if (this == nullptr) {return;}
+        if (func == nullptr) {return;}
+        m_additional_preprocessors.connect(func);
+    }
+
+    /**
+     * Connect a command definer to the environment. Crucial
+     * if you intend to graft commands onto DSS.
+     * 
+     * @param fnuc A pointer to the definer function
+     * 
+     * @see Executor::connect_preprocessor_definer
+     */
+    void connect_command_definer(const Definer func)
+    {
+        if (this == nullptr) {return;}
+        m_additional_commands.connect(func);
+    }
+
+    void spawn_executor()
+    {
+        Executor new_executor = Executor(unique_runid(), m_additional_preprocessors, m_additional_commands);
+        m_executors.push_back(new_executor);
+    }
+
+    void init()
+    {
+        spawn_executor();
+    }
+
+    auto main_executor() -> std::optional<Executor>
+    {
+        if (m_executors.size() == 0)
+        {
+            return std::nullopt;
+        }
+
+        return m_executors[0];
+    }
+
+    auto unique_runid() -> RunID
+    {
+        return m_id_max;
+        m_id_max++;
+    }
+
+    auto executor_by_id(RunID id) -> std::optional<Executor>
+    {
+        for (auto executor : m_executors)
+        {
+            if (executor.get_id() != id) {continue;}
+
+            return executor;
+        }
+
+        return std::nullopt;
     }
 };
 

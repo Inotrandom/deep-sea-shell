@@ -23,11 +23,17 @@ int main(int argv, char** argc)
 {
     runtime::Environment env = runtime::Environment();
     env.connect_command_definer(lang::definer);
+    env.init();
+    std::optional<Executor> opt_main_executor = env.main_executor();
 
-    env.exec(
-        "out Hello, world!"
-        "\nout That's not nice..."
-    );
+    if (opt_main_executor.has_value() == false)
+    {
+        return 1;
+    }
+
+    Executor main_executor = opt_main_executor.value();
+
+    main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
 
     return 0;
 }

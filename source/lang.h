@@ -35,11 +35,11 @@ namespace func
     }
 }
 
-static std::any definer(Environment *env)
+static std::any definer(Executor *exec)
 {
-    if (env == nullptr) {return NULL;}
+    if (exec == nullptr) {return NULL;}
 
-    env->define_command(
+    exec->define_command(
         func::out,
         "out",
         "outputs to console"
