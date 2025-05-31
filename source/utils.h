@@ -37,29 +37,6 @@ static inline std::vector<std::string> string_split(std::string& s, const std::s
 }
 
 /**
- * Arguments to functions connected to delegates
- */
-typedef std::vector<std::string> DSSFuncArgs;
-
-/**
- * Return type of functions connected to delegates
- */
-typedef std::size_t DSSReturnType;
-
-/**
- * Typing of function pointers that should be
- * passed onto delegates
- */
-typedef DSSReturnType (*DSSFunc)(DSSFuncArgs);
-
-/**
- * Return type of Delegate::call and any other
- * functions that pass this result down the 
- * pipeline
- */
-typedef std::vector<DSSReturnType> DSSDelegateReturnType;
-
-/**
  * Function pointers are connected to the delegate,
  * which can be called with the same arguments.
  * 
@@ -128,7 +105,8 @@ public:
      * behavior will not appear in the vector, and as such, relying on the fact that the number
      * of returns will be consistent is unsafe.
      */
-    auto call(A arg) -> R
+    template<typename... Ts>
+    auto call(Ts... arg) -> R
     {
         R res;
 
@@ -136,7 +114,7 @@ public:
 
         for (auto func : m_connected)
         {
-            res.push_back(func(arg));
+            res.push_back(func(arg...));
         }
 
         return res;

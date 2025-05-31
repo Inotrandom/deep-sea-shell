@@ -10,9 +10,32 @@
 #include <any>
 #include <optional>
 
+class Executor;
+
 typedef int64_t RunID;
 
-class Executor;
+/**
+ * Arguments to functions connected to delegates
+ */
+typedef std::vector<std::string> DSSFuncArgs;
+
+/**
+ * Return type of functions connected to delegates
+ */
+typedef std::size_t DSSReturnType;
+
+/**
+ * Typing of function pointers that should be
+ * passed onto delegates
+ */
+typedef DSSReturnType (*DSSFunc)(Executor, DSSFuncArgs);
+
+/**
+ * Return type of Delegate::call and any other
+ * functions that pass this result down the 
+ * pipeline
+ */
+typedef std::vector<DSSReturnType> DSSDelegateReturnType;
 
 /**
  * Consider that DSS Commands are essentially named Delegates.
@@ -33,7 +56,7 @@ private:
     std::string m_description;
     int64_t m_minimum_args;
     int64_t m_maximum_args;
-    Executor* m_parent_env;
+    Executor* m_parent_ex;
 
 public:
     /**
@@ -52,7 +75,7 @@ public:
         std::string description,
         int64_t minimum_args = -1,
         int64_t maximum_args = -1,
-        Executor* parent_env = nullptr
+        Executor* parent_ex = nullptr
     )
     {
         //m_delegate = Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType>();
@@ -61,7 +84,7 @@ public:
         m_description = description;
         m_minimum_args = minimum_args;
         m_maximum_args = maximum_args;
-        m_parent_env = parent_env;
+        m_parent_ex = parent_ex;
     }
 
     /**
@@ -76,26 +99,7 @@ public:
      * 
      * @see DSSDelegate::call
      */
-    auto attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
-    {
-        DSSDelegateReturnType res = {};
-        
-        if (this == nullptr) {return res;}
-
-        std::vector<std::string> tokens = string_split(inp, delim);
-        
-        if (tokens[0] != m_name) {return res;}
-
-        tokens.erase(tokens.begin());
-
-        std::size_t arg_count = tokens.size();
-
-        //if (arg_count < m_minimum_args) {return res;}
-        //if (m_maximum_args > -1 && arg_count > m_maximum_args) {return res;}
-
-        res = m_delegate.call(tokens);
-        return res;
-    }
+    auto attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType;
 };
 
 namespace err
@@ -135,6 +139,29 @@ public:
 typedef std::any (*Definer)(Executor*);
 typedef utils::Delegate<Definer, Executor*, std::vector<std::any>> DefinerDelegate;
 
+struct Var
+{
+    std::string id;
+    std::any data;
+};
+
+class Vars
+{
+private:
+    std::vector<Var> m_vars;
+
+public:
+    auto get_var(std::string id) -> std::optional<Var>
+    {
+        for (auto var : m_vars)
+        {
+            if (var.id != id) {continue;}
+
+            return var;
+        }
+    }
+};
+
 /**
  * DSS execution environment. Accepts and executes tasks.
  */
@@ -163,6 +190,11 @@ private:
      * of completing
      */
     std::vector<Task> m_tasks;
+
+    /**
+     * Data stored in the executor
+     */
+    Vars m_exec_vars;
 
     /**
      * Whether or not the environment is actively
@@ -327,6 +359,29 @@ public:
         return m_id;
     }
 };
+
+auto Command::attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
+{
+    DSSDelegateReturnType res = {};
+    
+    if (this == nullptr) {return res;}
+
+    std::vector<std::string> tokens = string_split(inp, delim);
+    
+    if (tokens[0] != m_name) {return res;}
+
+    tokens.erase(tokens.begin());
+
+    std::size_t arg_count = tokens.size();
+
+    //if (arg_count < m_minimum_args) {return res;}
+    //if (m_maximum_args > -1 && arg_count > m_maximum_args) {return res;}
+
+    if (m_parent_ex == nullptr) {return res;}
+
+    res = m_delegate.call(*m_parent_ex, tokens);
+    return res;
+}
 
 class Environment
 {

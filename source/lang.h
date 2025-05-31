@@ -21,7 +21,7 @@ const std::string NAME = "lang";
 
 namespace func
 {
-    auto out(utils::DSSFuncArgs args) -> utils::DSSReturnType
+    auto out(runtime::Executor ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
         for (auto argument : args)
         {
