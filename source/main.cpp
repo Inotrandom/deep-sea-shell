@@ -34,6 +34,7 @@ int main(int argv, char** argc)
     Executor main_executor = opt_main_executor.value();
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
+    main_executor.exec("alias TEST VALUE");
 
     return 0;
 }

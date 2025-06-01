@@ -139,19 +139,50 @@ public:
 typedef std::any (*Definer)(Executor*);
 typedef utils::Delegate<Definer, Executor*, std::vector<std::any>> DefinerDelegate;
 
+template<typename T>
 struct Var
 {
     std::string id;
-    std::any data;
+    T data;
 };
 
 class Vars
 {
 private:
-    std::vector<Var> m_vars;
+    std::vector<Var<std::any>> m_vars;
 
 public:
-    auto get_var(std::string id) -> std::optional<Var>
+    /**
+     * Creates an environment variable
+     * 
+     * @tparam T the type of the data for the variable.
+     * IDs are always std::strings
+     * 
+     * @param id The identifier of the variable.
+     * 
+     * @param data The data to initialize the variable with.
+     * 
+     * @see Var
+     */
+    template<typename T>
+    void init_var(std::string id, T data)
+    {
+        if (get_var(id).has_value() == true) {return;}
+
+        Var new_var = Var<T>();
+        new_var.data = data;
+        new_var.id = id;
+    }
+
+    /**
+     * Attempts to get a variable.
+     * 
+     * @param id The string ID of the variable.
+     * 
+     * @return An optional containing the variable. Will be
+     * std::nullopt if the variable does not exist.
+     */
+    auto get_var(std::string id) -> std::optional<Var<std::any>>
     {
         for (auto var : m_vars)
         {
@@ -159,6 +190,8 @@ public:
 
             return var;
         }
+
+        return std::nullopt;
     }
 };
 
@@ -203,6 +236,8 @@ private:
     bool m_busy;
 
     RunID m_id;
+
+    Task *m_current_task;
 
     /**
      * Directly executes a script.
@@ -256,6 +291,8 @@ private:
         utils::DSSReturnType res = 1;
 
         if (this == nullptr) {return res;}
+
+        m_current_task = &task;
 
         std::string script = task.get_script();
         std::vector<std::string> to_commands = string_split(script, key::MULTILINE_DELIM);
@@ -312,6 +349,7 @@ public:
         m_additional_preprocessors = additional_preprocessors;
         m_additional_commands = additional_commands;
         m_tasks = {};
+        m_current_task = nullptr;
 
         m_id = id;
     }
@@ -354,9 +392,19 @@ public:
         exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
     }
 
-    RunID get_id()
+    auto get_id() -> RunID
     {
         return m_id;
+    }
+
+    auto get_vars() -> Vars
+    {
+        return m_exec_vars;
+    }
+
+    auto get_current_task() -> Task*
+    {
+        return m_current_task;
     }
 };
 
