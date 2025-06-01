@@ -59,7 +59,7 @@ const std::string NAME = "lang";
 
 namespace func
 {
-    auto out(runtime::Executor ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    auto out(runtime::Executor& ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
         for (auto argument : args)
         {
@@ -72,7 +72,7 @@ namespace func
         return 0;
     }
 
-    auto alias(runtime::Executor ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    auto alias(runtime::Executor& ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
         std::string id = args[0];
         args.erase(args.begin());

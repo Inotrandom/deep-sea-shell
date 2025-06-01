@@ -28,7 +28,7 @@ typedef std::size_t DSSReturnType;
  * Typing of function pointers that should be
  * passed onto delegates
  */
-typedef DSSReturnType (*DSSFunc)(Executor, DSSFuncArgs);
+typedef DSSReturnType (*DSSFunc)(Executor&, DSSFuncArgs);
 
 /**
  * Return type of Delegate::call and any other
