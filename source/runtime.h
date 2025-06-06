@@ -28,7 +28,7 @@ typedef std::size_t DSSReturnType;
  * Typing of function pointers that should be
  * passed onto delegates
  */
-typedef DSSReturnType (*DSSFunc)(Executor&, DSSFuncArgs);
+typedef DSSReturnType (*DSSFunc)(Executor*, DSSFuncArgs);
 
 /**
  * Return type of Delegate::call and any other
@@ -164,14 +164,15 @@ public:
      * 
      * @see Var
      */
-    template<typename T>
-    void init_var(std::string id, T data)
+    void init_var(std::string id, std::any data)
     {
         if (get_var(id).has_value() == true) {return;}
 
-        Var new_var = Var<T>();
+        Var new_var = Var<std::any>();
         new_var.data = data;
         new_var.id = id;
+
+        m_vars.push_back(new_var);
     }
 
     /**
@@ -402,6 +403,11 @@ public:
         return m_exec_vars;
     }
 
+    void set_vars(Vars to)
+    {
+        m_exec_vars = to;
+    }
+
     auto get_current_task() -> Task*
     {
         return m_current_task;
@@ -427,7 +433,7 @@ auto Command::attempt_parse_and_exec(std::string inp, std::string delim) -> DSSD
 
     if (m_parent_ex == nullptr) {return res;}
 
-    res = m_delegate.call(*m_parent_ex, tokens);
+    res = m_delegate.call(m_parent_ex, tokens);
     return res;
 }
 

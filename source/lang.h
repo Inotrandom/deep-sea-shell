@@ -16,7 +16,8 @@
 #include <iostream>
 #include <format>
 
-const std::string VAR_ALIAS = "alias";
+const std::string ALIAS_VAR = "alias";
+const std::string ALIAS_DEREF = "&";
 
 struct Alias
 {
@@ -25,10 +26,10 @@ struct Alias
 };
 typedef std::vector<Alias> AliasVarData;
 
-auto create_alias(runtime::Executor& ex, std::string id, std::string value) -> utils::DSSReturnType
+auto create_alias(runtime::Executor* ex, std::string id, std::string value) -> utils::DSSReturnType
 {
-    runtime::Vars vars = ex.get_vars();
-    std::optional<runtime::Var<std::any>> found = vars.get_var(VAR_ALIAS);
+    runtime::Vars vars = ex->get_vars();
+    std::optional<runtime::Var<std::any>> found = vars.get_var(ALIAS_VAR);
 
     Alias new_alias = Alias();
     new_alias.id = id;
@@ -37,7 +38,8 @@ auto create_alias(runtime::Executor& ex, std::string id, std::string value) -> u
     if (found.has_value() == false) 
     {
         AliasVarData new_data = {new_alias};
-        vars.init_var(VAR_ALIAS, new_data);
+        vars.init_var(ALIAS_VAR, new_data);
+        ex->set_vars(vars);
         
         return 0;
     }
@@ -59,8 +61,10 @@ const std::string NAME = "lang";
 
 namespace func
 {
-    auto out(runtime::Executor& ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    auto out(runtime::Executor* ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
+        if (ex == nullptr) {return 1;}
+
         for (auto argument : args)
         {
             std::cout << argument;
@@ -72,8 +76,10 @@ namespace func
         return 0;
     }
 
-    auto alias(runtime::Executor& ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    auto alias(runtime::Executor* ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
+        if (ex == nullptr) {return 1;}
+
         std::string id = args[0];
         args.erase(args.begin());
         std::string value;
@@ -88,7 +94,21 @@ namespace func
     }
 }
 
-static std::any definer(Executor *exec)
+static std::any preprocessor_definer(Executor *exec)
+{
+    if (exec == nullptr) {return NULL;}
+
+    exec->define_command(
+        func::alias,
+        "alias",
+        "creates an alias",
+        2
+    );
+
+    return NULL;
+}
+
+static std::any command_definer(Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
 
@@ -96,13 +116,6 @@ static std::any definer(Executor *exec)
         func::out,
         "out",
         "outputs to console"
-    );
-
-    exec->define_command(
-        func::alias,
-        "alias",
-        "creates an alias",
-        2
     );
 
     return NULL;

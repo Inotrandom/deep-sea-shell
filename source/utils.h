@@ -37,6 +37,23 @@ static inline std::vector<std::string> string_split(std::string& s, const std::s
 }
 
 /**
+ * Finds all occurances and replaces them in a string.
+ * 
+ * @param s The string to be operated over
+ * 
+ * @param what The string to match occurences in `s`
+ * 
+ * @param with The string to replace `what` with
+ */
+static inline void string_replace(std::string& s, std::string& what, const std::string& with) {
+    std::size_t pos = 0;
+
+    while ((pos = s.find(what)) != std::string::npos) {
+        s.replace(pos, what.size(), with);
+    }
+}
+
+/**
  * Function pointers are connected to the delegate,
  * which can be called with the same arguments.
  * 

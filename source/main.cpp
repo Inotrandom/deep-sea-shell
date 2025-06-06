@@ -22,7 +22,8 @@
 int main(int argv, char** argc)
 {
     runtime::Environment env = runtime::Environment();
-    env.connect_command_definer(lang::definer);
+    env.connect_preprocessor_definer(lang::preprocessor_definer);
+    env.connect_command_definer(lang::command_definer);
     env.init();
     std::optional<Executor> opt_main_executor = env.main_executor();
 
