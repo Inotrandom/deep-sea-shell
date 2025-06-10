@@ -125,13 +125,26 @@ namespace key
 class Task
 {
 private:
+    /**
+     * The physical DSS script inside
+     * the task
+     */
     std::string m_script;
 public:
+    /**
+     * Constructs a task.
+     * 
+     * @param script The script contents of the task
+     */
     Task(const std::string script)
     {
         m_script = script;
     }
 
+    /** 
+     * @return A reference to the script of the task.
+     * Mutability is intentional.
+     */
     auto get_script() -> std::string&
     {
         return m_script;
@@ -145,25 +158,56 @@ template<typename T>
 class Var
 {
 private:
+    /**
+     * The id of the variable.
+     */
     std::string m_id;
+
+    /**
+     * The data of the variable
+     */
     std::vector<T> m_data;
 public:
+    /**
+     * Constructs an environment variable.
+     * 
+     * @param id The id of the variable.
+     * Note that variables will fail to
+     * initialize unless they have different
+     * ids.
+     * 
+     * @param data Data to initialize the variable
+     * with.
+     */
     Var(std::string id, std::vector<T> data)
     {
         m_id = id;
         m_data = data;
     }
 
+    /**
+     * @return A reference to the 
+     */
     auto get_id() -> std::string&
     {
         return m_id;
     }
 
+    /**
+     * @return A reference to a vector 
+     * containing the data of the variable.
+     */
     auto get_data() -> std::vector<T>&
     {
         return m_data;
     }
 
+    /**
+     * @tparam A the type of the variable.
+     * This is assumed to be the same as the
+     * type of the variable, or else this
+     * will throw an ICE!
+     */
     template<typename A>
     void append_data(A what)
     {
@@ -195,6 +239,9 @@ const std::string AUTO_PREPROCESSOR_VAR = "auto_preprocessor";
 class Vars
 {
 private:
+    /**
+     * A vector of generic (`std::any`) environment variables
+     */
     std::vector<Var<std::any>> m_vars;
 
 public:
@@ -219,6 +266,12 @@ public:
         m_vars.push_back(new_var);
     }
 
+    /**
+     * Attempts to retrieve a variable lazily.
+     * 
+     * @return A pointer to a generic (`std::any`) variable.
+     * Will be `nullptr` if the variable is not found!
+     */
     auto get_var(std::string id) -> Var<std::any>*
     {
         size_t index = 0;
@@ -233,6 +286,13 @@ public:
         return nullptr;
     }
 
+    /**
+     * Attempts to retrieve a variable lazily, and
+     * will initialize the variable if the retrieval fails.
+     * 
+     * @return A pointer to the variable. This should
+     * be safe to rely on.
+     */
     auto get_or_add_var(std::string id) -> Var<std::any>*
     {
         Var<std::any> *p_res = get_var(id);
@@ -246,6 +306,12 @@ public:
         return p_res;
     }
 
+    /**
+     * Returns a bool describing whether the variable
+     * of id `id` exists (it will find this lazily).
+     * 
+     * @param id The id to compare against variables
+     */
     auto has_var(std::string id) -> bool
     {
         if (get_var(id) != nullptr) {return true;}
@@ -293,8 +359,18 @@ private:
      */
     bool m_busy;
 
+    /**
+     * The unique id of the executor. This is to
+     * differentiate them within the `Environment`
+     * hierarchy.
+     */
     RunID m_id;
 
+    /**
+     * A pointer to the task that is currently being
+     * processed. This will be null if there are no
+     * tasks (duh).
+     */
     Task *m_current_task;
 
     /**
@@ -339,20 +415,6 @@ private:
         }
 
         direct_exec(statements);
-
-        /*
-        std::cout << "Did it even get fucking called?";
-        std::optional<Var<std::any>> found = m_exec_vars.get_var(AUTO_PREPROCESSOR_VAR);
-        
-        if (found.has_value() == false) {return;}
-        
-        try 
-        {
-            AutoPreprocVar auto_preprocessors = std::any_cast<AutoPreprocVar>(found.value());
-            direct_exec(auto_preprocessors.data);
-        }
-        catch (std::bad_any_cast &_e) {return; }
-        */
     }
 
     /**
@@ -492,22 +554,40 @@ public:
         exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
     }
 
+    /**
+     * @return A clone of the executor's RunID
+     */
     auto get_id() -> RunID
     {
         return m_id;
     }
 
+    /**
+     * @return A reference to this executor's environment `Vars`.
+     */
     auto get_vars() -> Vars&
     {
         return m_exec_vars;
     }
 
+    /**
+     * @return A pointer to the currently procesing task.
+     * This may be null!
+     */
     auto get_current_task() -> Task*
     {
         return m_current_task;
     }
 };
 
+/**
+ * Activates a pipeline which parses and executes
+ * a statement.
+ * 
+ * @param inp The statement to parse
+ * 
+ * @param delim The delimiter to separate tokens
+ */
 auto Command::attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
 {
     DSSDelegateReturnType res = {};
@@ -522,24 +602,78 @@ auto Command::attempt_parse_and_exec(std::string inp, std::string delim) -> DSSD
 
     std::size_t arg_count = tokens.size();
 
-    //if (arg_count < m_minimum_args) {return res;}
-    //if (m_maximum_args > -1 && arg_count > m_maximum_args) {return res;}
-
     if (m_parent_ex == nullptr) {return res;}
 
     res = m_delegate.call(m_parent_ex, tokens);
     return res;
 }
 
+/**
+ * A DSS environment. This contains
+ * multiple executors
+ */
 class Environment
 {
 private:
+    /**
+     * The maximum executor ID.
+     * This is incremented every time an executor
+     * is created in order to ensure executors have
+     * unique ids.
+     */
     RunID m_id_max;
+
+    /**
+     * A vector of every executor that is
+     * currently alive in this environment.
+     */
     std::vector<Executor> m_executors;
+
+    /**
+     * Definer delegate containing additional preprocessor definers.
+     */
     DefinerDelegate m_additional_preprocessors;
+
+    /**
+     * Definer delegate containing additional command definers.
+     */
     DefinerDelegate m_additional_commands;
 
+    /**
+     * Generates a unique RunID. This is
+     * useful when spawning executors.
+     */
+    auto unique_runid() -> RunID
+    {
+        return m_id_max;
+        m_id_max++;
+    }
+
+    /**
+     * Lazily retrieves the executor with RunID `id`.
+     * 
+     * @param id The id of the executor to attempt and find
+     * 
+     * @return An optional containing the executor, if it
+     * exists.
+     */
+    auto executor_by_id(RunID id) -> std::optional<Executor>
+    {
+        for (auto executor : m_executors)
+        {
+            if (executor.get_id() != id) {continue;}
+
+            return executor;
+        }
+
+        return std::nullopt;
+    }
+
 public:
+    /**
+     * Constructs an environment with a default
+     * maximum ID of zero (root id).
+     */
     Environment()
     {
         m_id_max = 0;
@@ -574,17 +708,31 @@ public:
         m_additional_commands.connect(func);
     }
 
+    /**
+     * Spawns an executor, gives it a unique RunID, and appends it to `m_excutors`
+     */
     void spawn_executor()
     {
         Executor new_executor = Executor(unique_runid(), m_additional_preprocessors, m_additional_commands);
         m_executors.push_back(new_executor);
     }
 
+    /**
+     * Initialize the environment and run default code to make the
+     * environment function. This method serves as an exemplary starting
+     * point for working with DSS.
+     */
     void init()
     {
         spawn_executor();
     }
 
+    /**
+     * Retrieves executor `0` (RunID), also known as the root ("main") executor.
+     * 
+     * @return an optional containing the main executor. 
+     * This should have a value if the environment has been initialized properly.
+     */
     auto main_executor() -> std::optional<Executor>
     {
         if (m_executors.size() == 0)
@@ -593,24 +741,6 @@ public:
         }
 
         return m_executors[0];
-    }
-
-    auto unique_runid() -> RunID
-    {
-        return m_id_max;
-        m_id_max++;
-    }
-
-    auto executor_by_id(RunID id) -> std::optional<Executor>
-    {
-        for (auto executor : m_executors)
-        {
-            if (executor.get_id() != id) {continue;}
-
-            return executor;
-        }
-
-        return std::nullopt;
     }
 };
 
