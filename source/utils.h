@@ -21,7 +21,7 @@
  * 
  * @returns A vector of substrings after having been separated by delimiter.
  */
-static inline std::vector<std::string> string_split(std::string& s, const std::string& delimiter) {
+static inline std::vector<std::string> string_split(std::string s, const std::string& delimiter) {
     std::vector<std::string> tokens;
     std::size_t pos = 0;
     std::string token;

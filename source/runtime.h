@@ -19,6 +19,8 @@ typedef int64_t RunID;
  */
 typedef std::vector<std::string> DSSFuncArgs;
 
+typedef std::vector<std::string> StrVec;
+
 /**
  * Return type of functions connected to delegates
  */
@@ -130,7 +132,7 @@ public:
         m_script = script;
     }
 
-    auto get_script() -> std::string
+    auto get_script() -> std::string&
     {
         return m_script;
     }
@@ -140,11 +142,55 @@ typedef std::any (*Definer)(Executor*);
 typedef utils::Delegate<Definer, Executor*, std::vector<std::any>> DefinerDelegate;
 
 template<typename T>
-struct Var
+class Var
 {
-    std::string id;
-    T data;
+private:
+    std::string m_id;
+    std::vector<T> m_data;
+public:
+    Var(std::string id, std::vector<T> data)
+    {
+        m_id = id;
+        m_data = data;
+    }
+
+    auto get_id() -> std::string&
+    {
+        return m_id;
+    }
+
+    auto get_data() -> std::vector<T>&
+    {
+        return m_data;
+    }
+
+    template<typename A>
+    void append_data(A what)
+    {
+        bool found = false;
+        for (auto element : m_data)
+        {
+            try
+            {
+                A comp = std::any_cast<A>(element);
+                if (comp != what)
+                {
+                    continue;
+                }
+            } catch (std::bad_any_cast &_e) {return;}
+
+            found = true;
+        }
+
+        if (found == true) {return;}
+
+        m_data.push_back(what);
+        
+        return;
+    }
 };
+
+const std::string AUTO_PREPROCESSOR_VAR = "auto_preprocessor";
 
 class Vars
 {
@@ -164,35 +210,46 @@ public:
      * 
      * @see Var
      */
-    void init_var(std::string id, std::any data)
+    void init_var(std::string id, std::vector<std::any> data)
     {
-        if (get_var(id).has_value() == true) {return;}
+        if (has_var(id) == true) {return;}
 
-        Var new_var = Var<std::any>();
-        new_var.data = data;
-        new_var.id = id;
+        Var new_var = Var<std::any>(id, data);
 
         m_vars.push_back(new_var);
     }
 
-    /**
-     * Attempts to get a variable.
-     * 
-     * @param id The string ID of the variable.
-     * 
-     * @return An optional containing the variable. Will be
-     * std::nullopt if the variable does not exist.
-     */
-    auto get_var(std::string id) -> std::optional<Var<std::any>>
+    auto get_var(std::string id) -> Var<std::any>*
     {
+        size_t index = 0;
         for (auto var : m_vars)
         {
-            if (var.id != id) {continue;}
+            if (var.get_id() != id) {index++; continue;}
 
-            return var;
+            return &(m_vars[index]);
+            index++;
         }
 
-        return std::nullopt;
+        return nullptr;
+    }
+
+    auto get_or_add_var(std::string id) -> Var<std::any>*
+    {
+        Var<std::any> *p_res = get_var(id);
+
+        if (p_res == nullptr)
+        {
+            init_var(id, {});
+            return get_var(id);
+        }
+
+        return p_res;
+    }
+
+    auto has_var(std::string id) -> bool
+    {
+        if (get_var(id) != nullptr) {return true;}
+        return false;
     }
 };
 
@@ -243,13 +300,12 @@ private:
     /**
      * Directly executes a script.
      * 
-     * This is a poor way to invoke DSS,
-     * and this function is intended exclusively
+     * This function is intended exclusively
      * for the internals of the interpreter.
      * 
      * @see Executor::exec_task
      */
-    void direct_exec(utils::DSSFuncArgs statements)
+    void direct_exec(StrVec statements)
     {
         for (auto statement : statements)
         {
@@ -261,6 +317,45 @@ private:
     }
 
     /**
+     * @brief Applies automatic preprocessors.
+     * 
+     * Automatic preprocessors run even if they
+     * aren't explicitly called within the script
+     * body. They are handled after the "preprocessor"
+     * pass finishes, but before the "command" pass 
+     * starts.
+     * 
+     * For example: `alias`
+     */
+    void auto_preprocessors()
+    {
+        Var<std::any> *auto_preprocessor_var = m_exec_vars.get_or_add_var(AUTO_PREPROCESSOR_VAR);
+        if (auto_preprocessor_var == nullptr) {return;} // Impossible
+
+        std::vector<std::string> statements = {};
+        for (auto element : auto_preprocessor_var->get_data())
+        {
+            statements.push_back( std::any_cast<std::string>(element) );
+        }
+
+        direct_exec(statements);
+
+        /*
+        std::cout << "Did it even get fucking called?";
+        std::optional<Var<std::any>> found = m_exec_vars.get_var(AUTO_PREPROCESSOR_VAR);
+        
+        if (found.has_value() == false) {return;}
+        
+        try 
+        {
+            AutoPreprocVar auto_preprocessors = std::any_cast<AutoPreprocVar>(found.value());
+            direct_exec(auto_preprocessors.data);
+        }
+        catch (std::bad_any_cast &_e) {return; }
+        */
+    }
+
+    /**
      * Command passes describe one singular execution of the program.
      * 
      * @param definer The function pointer that determines which commands
@@ -269,7 +364,7 @@ private:
      * @param statements A vector of individual command strings. These will
      * be further split into individual tokens by the command itself.
      */
-    void command_pass(DefinerDelegate definer, utils::DSSFuncArgs statements)
+    void command_pass(DefinerDelegate definer, StrVec statements)
     {
         if (this == nullptr) {return;}
         m_loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
@@ -295,11 +390,15 @@ private:
 
         m_current_task = &task;
 
-        std::string script = task.get_script();
-        std::vector<std::string> to_commands = string_split(script, key::MULTILINE_DELIM);
+        std::string &script = task.get_script();
+        StrVec statements = string_split(script, key::MULTILINE_DELIM);
 
-        command_pass(m_additional_preprocessors, to_commands);
-        command_pass(m_additional_commands, to_commands);
+        command_pass(m_additional_preprocessors, statements);
+        auto_preprocessors();
+
+        statements = string_split(script, key::MULTILINE_DELIM); // Update after the preprocessors are finished
+
+        command_pass(m_additional_commands, statements);
 
         return 0;
     }
@@ -398,14 +497,9 @@ public:
         return m_id;
     }
 
-    auto get_vars() -> Vars
+    auto get_vars() -> Vars&
     {
         return m_exec_vars;
-    }
-
-    void set_vars(Vars to)
-    {
-        m_exec_vars = to;
     }
 
     auto get_current_task() -> Task*

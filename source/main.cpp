@@ -35,7 +35,10 @@ int main(int argv, char** argc)
     Executor main_executor = opt_main_executor.value();
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
-    main_executor.exec("alias TEST VALUE");
+    main_executor.exec("alias_def TEST VALUE");
+    main_executor.exec("alias_def PROFANE expletives");
+    main_executor.exec("alias_def ANOTHER alias");
+    main_executor.exec("out $TEST");
 
     return 0;
 }
