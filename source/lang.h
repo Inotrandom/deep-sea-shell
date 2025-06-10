@@ -16,13 +16,45 @@
 #include <iostream>
 #include <format>
 
+/**
+ * Name of the alias environment variable
+ */
 const std::string ALIAS_VAR = "alias";
+
+/**
+ * Key sequence for an alias dereference.
+ * A prepend of this and the alias's id
+ * signals the parser to complete a dereference.
+ */
 const std::string ALIAS_DEREF = "$";
+
+/**
+ * Command for automatically using an alias.
+ */
 const std::string ALIAS_USE = "alias";
 
+/**
+ * Aliases are versatile preprocessor macros that
+ * replace parts of the code before the "command" pass.
+ * 
+ * This is idiomatic to `#define` in C.
+ * 
+ * The particular class is a structure to store alias
+ * values.
+ */
 struct Alias
 {
+    /**
+     * The identifier of the alias. This, in combination
+     * with `ALIAS_DEREF`, is used by the parser to figure
+     * out where aliases should be applied.
+     */
     std::string id;
+
+    /**
+     * The value of the alias. This is what physically
+     * replaces instances of an alias dereference
+     */
     std::string value;
 
     bool operator<=>(const Alias&) const = default;
@@ -30,11 +62,13 @@ struct Alias
 typedef std::vector<Alias> AliasVarData;
 
 /**
- * Applies alias as an automatic preprocessor
+ * Applies `alias` as an automatic preprocessor.
+ * If no aliases are defined in the executor, then 
+ * this function will never get called. Consequently,
+ * the `alias` preprocessor will never become automatic.
  */
 void use_alias(runtime::Executor* p_ex)
 {
-    //std::cout << "Alias is used!" << std::endl;
     runtime::Vars &vars = p_ex->get_vars();
     runtime::Var<std::any> *auto_preproc_var = vars.get_or_add_var(runtime::AUTO_PREPROCESSOR_VAR);
 
@@ -78,6 +112,9 @@ const std::string NAME = "lang";
 
 namespace func
 {
+    /**
+     * Out will push arguments into the stdout stream.
+     */
     auto out(runtime::Executor* p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
@@ -93,6 +130,9 @@ namespace func
         return 0;
     }
 
+    /**
+     * Alias Define will define an alias and call `use_alias`
+     */
     auto alias_def(runtime::Executor* p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
@@ -108,13 +148,15 @@ namespace func
             value += argument;
         }
 
-        //std::cout << id << value << std::endl;
         return create_alias(p_ex, id, value);
     }
 
+    /**
+     * Alias will apply defined aliases throughout
+     * the script lazily.
+     */
     auto alias(runtime::Executor* p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
     {
-        //std::cout << "Alias is called!" << std::endl;
         if (p_ex == nullptr) {return 1;}
 
         runtime::Task *p_current_task = p_ex->get_current_task();
@@ -132,14 +174,15 @@ namespace func
             
             std::string deref = ALIAS_DEREF + alias.id;
             string_replace(script, deref, alias.value);
-            //std::cout << "dereferencing: " << deref << std::endl;
-            //std::cout << "the script was modified to: " << script << std::endl;
         }
 
         return 0;
     }
 }
 
+/**
+ * Definer for `lang` preprocessors
+ */
 static std::any preprocessor_definer(Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
@@ -160,6 +203,9 @@ static std::any preprocessor_definer(Executor *exec)
     return NULL;
 }
 
+/**
+ * Definer for `command` preprocessors
+ */
 static std::any command_definer(Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
