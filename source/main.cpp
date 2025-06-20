@@ -18,6 +18,7 @@
 #include <iostream>
 #include "runtime.h"
 #include "lang.h"
+#include "utils.h"
 
 int main(int argv, char** argc)
 {
@@ -32,12 +33,16 @@ int main(int argv, char** argc)
         return 1;
     }
 
+    //std::string why = "./test.dss";
+    //std::cout << utils::file_read(why).value();
+
     Executor main_executor = opt_main_executor.value();
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
     main_executor.exec("alias_def TEST VALUE");
     main_executor.exec("alias_def PROFANE expletives");
     main_executor.exec("alias_def ANOTHER alias");
+    main_executor.exec("src ../test.dss");
     main_executor.exec("out $TEST");
 
     return 0;

@@ -114,6 +114,8 @@ namespace key
     const std::string MULTILINE_DELIM = "\n";
     const std::string TOKEN_DELIM = " ";
 
+    const std::string COMMENT_ID = "//";
+
     const bool FLAG_RECURSIVE_EXECUTION = true;
 }
 
@@ -348,6 +350,8 @@ private:
      */
     std::vector<Task> m_tasks;
 
+    std::vector<Task> m_task_buffer;
+
     /**
      * Data stored in the executor
      */
@@ -488,10 +492,13 @@ private:
             exec_task(task);
         }
         
-        m_tasks.clear(); // All tasks are completed, whether successfully or not
         m_busy = false;
+        m_tasks.clear(); // All tasks are completed, whether successfully or not
         if (recursive == true)
         {
+            m_tasks.insert(m_tasks.end(), m_task_buffer.begin(), m_task_buffer.end());
+            m_task_buffer.clear();
+
             exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION);
         }
 
@@ -536,9 +543,16 @@ public:
     }
 
     /**
+     * Queues a task while the executor is busy.
+     */
+    void queue_task(Task task)
+    {
+        m_task_buffer.push_back(task);
+    }
+
+    /**
      * Execute a DSS script. This is the
-     * intended solution for giving a DSS environment
-     * execution tasks.
+     * intended solution for beginning task execution
      * 
      * When given input, the environment will create a task, then execute the task
      * after it is finished with all previous (older) tasks.

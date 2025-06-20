@@ -14,7 +14,7 @@
 #include "runtime.h" // std::any and std::optional
 
 #include <iostream>
-#include <format>
+#include <filesystem>
 
 /**
  * Name of the alias environment variable
@@ -178,6 +178,23 @@ namespace func
 
         return 0;
     }
+
+    auto source(runtime::Executor *p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    {
+        if (p_ex == nullptr) {return 1;}
+
+        std::optional<std::string> res = utils::file_read(args[0]);
+
+        //std::cout << std::filesystem::current_path();
+        //std::cout << res.has_value();
+
+        if (res.has_value() == false) {return 2;}
+
+        runtime::Task task = runtime::Task(res.value());
+        p_ex->queue_task(task);
+
+        return 0;
+    }
 }
 
 /**
@@ -186,6 +203,12 @@ namespace func
 static std::any preprocessor_definer(Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
+
+    exec->define_command(
+        func::source,
+        "src",
+        "runs a dss script at path <path>"
+    );
 
     exec->define_command(
         func::alias_def,
