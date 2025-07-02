@@ -10,9 +10,25 @@
 #include <any>
 #include <optional>
 
+void push_error(std::string what, int line = -1)
+{
+    std::cout << std::endl << "error: a critical exception occurred";
+    
+    if (line > -1)
+    {
+        std::cout << " on line " << line;
+    }
+
+    std::cout << std::endl;
+    std::cout << what << std::endl;
+}
+
 class Executor;
 
 typedef int64_t RunID;
+
+typedef std::map<uint, std::string> ErrCodes;
+typedef std::map<std::string, ErrCodes> ErrKey;
 
 /**
  * Arguments to functions connected to delegates
@@ -101,12 +117,13 @@ public:
      * 
      * @see DSSDelegate::call
      */
-    auto attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType;
+    auto attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType;
 };
 
 namespace err
 {
-    const std::string NULL_ENV = "error: environment is null, definer for {} is unable to define commands";
+    const std::string NOT_A_COMMAND = "command does not exist or is not defined";
+    const std::string UNKNOWN = "an unnamed critical exception occurred";
 }
 
 namespace key
@@ -378,6 +395,28 @@ private:
     Task *m_current_task;
 
     /**
+     * The error keys for every defined command
+     */
+    ErrKey m_lookup_error;
+
+    void find_and_push_error(std::string command, int code, int line = -1)
+    {
+        try
+        {
+            ErrCodes found = m_lookup_error.at(command);
+
+            std::string error = found.at(code);
+
+            push_error(error, line);
+        }
+        catch (std::out_of_range &_e)
+        {
+            push_error(err::UNKNOWN, line);
+            return;
+        }
+    }
+
+    /**
      * Directly executes a script.
      * 
      * This function is intended exclusively
@@ -387,12 +426,46 @@ private:
      */
     void direct_exec(StrVec statements)
     {
+        int line = -1;
+
         for (auto statement : statements)
         {
+            line++;
+            StrVec parsed = string_split(statement, key::TOKEN_DELIM);
+
+            // No command
+            if (parsed.size() == 0)
+            {
+                continue;
+            }
+
+            utils::DSSDelegateReturnType res = {};
+
             for (auto command : m_loaded_commands)
             {
-                command.attempt_parse_and_exec(statement, key::TOKEN_DELIM);
+                utils::DSSDelegateReturnType opt_res = command.attempt_parse_and_exec(parsed);
+
+                if (opt_res.size() == 0)
+                {
+                    continue;
+                }
+
+                res = opt_res;
             }
+
+            if (res.size() == 0)
+            {
+                continue;
+            }
+
+            // Successful execution
+            if (res[0] == 0)
+            {
+                continue;
+            }
+
+            // The first element of parsed is the keyword, and the first element of res is the returned value
+            find_and_push_error(parsed[0], res[0], line);
         }
     }
 
@@ -523,6 +596,11 @@ public:
         m_id = id;
     }
 
+    void apply_error_key(ErrKey key)
+    {
+        m_lookup_error.insert(key.begin(), key.end());
+    }
+
     /**
      * Directly defines a DSS command, whether it be a preprocessor
      * or an ordinary command. Definer functions exist with the sole
@@ -602,13 +680,11 @@ public:
  * 
  * @param delim The delimiter to separate tokens
  */
-auto Command::attempt_parse_and_exec(std::string inp, std::string delim) -> DSSDelegateReturnType
+auto Command::attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType
 {
     DSSDelegateReturnType res = {};
     
     if (this == nullptr) {return res;}
-
-    std::vector<std::string> tokens = string_split(inp, delim);
     
     if (tokens[0] != m_name) {return res;}
 

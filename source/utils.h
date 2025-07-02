@@ -15,6 +15,7 @@
 #include <optional>
 #include <fstream>
 #include <sstream>
+#include <map>
 
 /**
  * Splits a string into multiple substrings, separated by a delimiter.
@@ -95,11 +96,13 @@ class Delegate
 {
 private:
     std::vector<F> m_connected;
+    int m_max_connected;
 
 public:
-    Delegate()
+    Delegate(int max_connected = 1)
     {
         m_connected = {};
+        m_max_connected = max_connected;
     }
 
     /**
@@ -114,6 +117,7 @@ public:
     void connect(const F func)
     {
         if (this == nullptr) {return;}
+        if (m_connected.size() == m_max_connected) {return;}
 
         m_connected.push_back(func);
     }

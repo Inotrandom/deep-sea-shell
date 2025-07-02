@@ -1,6 +1,6 @@
 out Script was executed successfully!
 out Dereferencing an alias in this script: $TEST
 
-alias_def NEW Success
+alias_def NEW Success-
 
 out Dereferencing a newly defined alias in this script: $NEW
