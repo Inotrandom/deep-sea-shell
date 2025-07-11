@@ -505,7 +505,6 @@ private:
      */
     void command_pass(DefinerDelegate definer, StrVec statements)
     {
-        if (this == nullptr) {return;}
         m_loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
         definer.call(this);
 
@@ -524,9 +523,6 @@ private:
     auto exec_task(Task task) -> utils::DSSReturnType
     {
         utils::DSSReturnType res = 1;
-
-        if (this == nullptr) {return res;}
-
         m_current_task = &task;
 
         std::string &script = task.get_script();
@@ -555,7 +551,6 @@ private:
     {
         utils::DSSDelegateReturnType res = {};
 
-        if (this == nullptr) {return res;}
         if (m_tasks.size() == 0) {return res;}
         if (m_busy == true) {return res;}
         m_busy = true;
@@ -614,7 +609,6 @@ public:
         int maximum_args = -1
     )
     {
-        if (this == nullptr) {return;}
 
         Command res = Command(func, name, description, minimum_args, maximum_args, this);
         m_loaded_commands.push_back(res);
@@ -639,8 +633,6 @@ public:
      */
     void exec(std::string script)
     {
-        if (this == nullptr) {return;}
-
         Task task = Task(script);
         m_tasks.push_back(task); // Append a task to the task list
         exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
@@ -683,8 +675,6 @@ public:
 auto Command::attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType
 {
     DSSDelegateReturnType res = {};
-    
-    if (this == nullptr) {return res;}
     
     if (tokens[0] != m_name) {return res;}
 
@@ -779,7 +769,6 @@ public:
      */
     void connect_preprocessor_definer(const Definer func)
     {
-        if (this == nullptr) {return;}
         if (func == nullptr) {return;}
         m_additional_preprocessors.connect(func);
     }
@@ -794,7 +783,6 @@ public:
      */
     void connect_command_definer(const Definer func)
     {
-        if (this == nullptr) {return;}
         m_additional_commands.connect(func);
     }
 

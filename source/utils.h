@@ -116,7 +116,6 @@ public:
      */
     void connect(const F func)
     {
-        if (this == nullptr) {return;}
         if (m_connected.size() == m_max_connected) {return;}
 
         m_connected.push_back(func);
@@ -131,8 +130,6 @@ public:
      */
     void disconnect(const F func)
     {
-        if (this == nullptr) {return;}
-
         const auto found = std::find(m_connected.begin(), m_connected.end(), func);
         
         if (found == m_connected.end()) {return;}
@@ -158,8 +155,6 @@ public:
     auto call(Ts... arg) -> R
     {
         R res;
-
-        if (this == nullptr) {return res;}
 
         for (auto func : m_connected)
         {
