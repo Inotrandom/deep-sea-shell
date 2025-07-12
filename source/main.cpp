@@ -38,6 +38,7 @@ int main(int argv, char** argc)
     main_executor.apply_error_key(lang::err_key);
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
+    main_executor.exec("src ../example.dss");
 
     return 0;
 }
