@@ -1,4 +1,8 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.28.3)
-PROJECT(DeepSeaShell)
-SET(CMAKE_CXX_STANDARD 20)
-ADD_EXECUTABLE(DeepSeaShell "source/main.cpp")
+cmake_minimum_required(VERSION 3.28.3)
+project(DeepSeaShell)
+set(CMAKE_CXX_STANDARD 20)
+
+add_library(runtime "source/runtime.cpp")
+
+add_executable(DeepSeaShell "source/main.cpp")
+target_link_libraries(DeepSeaShell PUBLIC runtime)

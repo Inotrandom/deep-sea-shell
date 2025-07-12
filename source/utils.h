@@ -17,6 +17,8 @@
 #include <sstream>
 #include <map>
 
+namespace utils {
+
 /**
  * Splits a string into multiple substrings, separated by a delimiter.
  * 
@@ -163,6 +165,8 @@ public:
 
         return res;
     }
+};
+
 };
 
 #endif

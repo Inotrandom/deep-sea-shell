@@ -7,14 +7,16 @@
  * features.
  */
 
-#ifndef lang
-#define lang
+#ifndef lang_h
+#define lang_h
 
 #include "utils.h" // std:vector, std::string, std::algorithm, and std::iterator
 #include "runtime.h" // std::any and std::optional
 
 #include <iostream>
 #include <filesystem>
+
+namespace lang {
 
 /**
  * Name of the alias environment variable
@@ -67,7 +69,7 @@ typedef std::vector<Alias> AliasVarData;
  * this function will never get called. Consequently,
  * the `alias` preprocessor will never become automatic.
  */
-void use_alias(runtime::Executor* p_ex)
+inline void use_alias(runtime::Executor* p_ex)
 {
     runtime::Vars &vars = p_ex->get_vars();
     runtime::Var<std::any> *auto_preproc_var = vars.get_or_add_var(runtime::AUTO_PREPROCESSOR_VAR);
@@ -92,7 +94,7 @@ void use_alias(runtime::Executor* p_ex)
  * 
  * @param data The data of the alias
  */
-auto create_alias(runtime::Executor* p_ex, std::string id, std::string data) -> utils::DSSReturnType
+inline auto create_alias(runtime::Executor* p_ex, std::string id, std::string data) -> runtime::DSSReturnType
 {
     runtime::Vars &vars = p_ex->get_vars();
     runtime::Var<std::any> *alias_var = vars.get_or_add_var(ALIAS_VAR);
@@ -115,7 +117,7 @@ namespace func
     /**
      * Out will push arguments into the stdout stream.
      */
-    auto out(runtime::Executor* p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    inline auto out(runtime::Executor* p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
@@ -133,7 +135,7 @@ namespace func
     /**
      * Alias Define will define an alias and call `use_alias`
      */
-    auto alias_def(runtime::Executor* p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    inline auto alias_def(runtime::Executor* p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
@@ -155,7 +157,7 @@ namespace func
      * Alias will apply defined aliases throughout
      * the script lazily.
      */
-    auto alias(runtime::Executor* p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    inline auto alias(runtime::Executor* p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
@@ -179,7 +181,7 @@ namespace func
         return 0;
     }
 
-    auto source(runtime::Executor *p_ex, utils::DSSFuncArgs args) -> utils::DSSReturnType
+    inline auto source(runtime::Executor *p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
@@ -200,7 +202,7 @@ namespace func
 /**
  * Definer for `lang` preprocessors
  */
-static std::any preprocessor_definer(Executor *exec)
+static std::any preprocessor_definer(runtime::Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
 
@@ -229,7 +231,7 @@ static std::any preprocessor_definer(Executor *exec)
 /**
  * Definer for `command` preprocessors
  */
-static std::any command_definer(Executor *exec)
+static std::any command_definer(runtime::Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
 
@@ -265,6 +267,8 @@ const runtime::ErrKey err_key = {
     {"src", src},
     {"alias_def", alias_def},
     {"alias", alias}
+};
+
 };
 
 #endif

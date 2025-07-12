@@ -26,7 +26,7 @@ int main(int argv, char** argc)
     env.connect_preprocessor_definer(lang::preprocessor_definer);
     env.connect_command_definer(lang::command_definer);
     env.init();
-    std::optional<Executor> opt_main_executor = env.main_executor();
+    std::optional<runtime::Executor> opt_main_executor = env.main_executor();
 
     if (opt_main_executor.has_value() == false)
     {
@@ -36,7 +36,7 @@ int main(int argv, char** argc)
     //std::string why = "./test.dss";
     //std::cout << utils::file_read(why).value();
 
-    Executor main_executor = opt_main_executor.value();
+    runtime::Executor main_executor = opt_main_executor.value();
     main_executor.apply_error_key(lang::err_key);
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");

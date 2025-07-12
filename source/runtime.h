@@ -3,25 +3,16 @@
  * It is critical to include this file to
  * use DSS.
  */
-#ifndef runtime
-#define runtime
+#ifndef runtime_h
+#define runtime_h
 
 #include "utils.h"
 #include <any>
 #include <optional>
 
-void push_error(std::string what, int line = -1)
-{
-    std::cout << std::endl << "error: a critical exception occurred";
-    
-    if (line > -1)
-    {
-        std::cout << " on line " << line;
-    }
+namespace runtime {
 
-    std::cout << std::endl;
-    std::cout << what << std::endl;
-}
+void push_error(std::string what, int line = -1);
 
 class Executor;
 
@@ -228,7 +219,7 @@ public:
      * will throw an ICE!
      */
     template<typename A>
-    void append_data(A what)
+    void append_data(A what) 
     {
         bool found = false;
         for (auto element : m_data)
@@ -399,22 +390,7 @@ private:
      */
     ErrKey m_lookup_error;
 
-    void find_and_push_error(std::string command, int code, int line = -1)
-    {
-        try
-        {
-            ErrCodes found = m_lookup_error.at(command);
-
-            std::string error = found.at(code);
-
-            push_error(error, line);
-        }
-        catch (std::out_of_range &_e)
-        {
-            push_error(err::UNKNOWN, line);
-            return;
-        }
-    }
+    void find_and_push_error(std::string command, int code, int line = -1);
 
     /**
      * Directly executes a script.
@@ -424,50 +400,7 @@ private:
      * 
      * @see Executor::exec_task
      */
-    void direct_exec(StrVec statements)
-    {
-        int line = -1;
-
-        for (auto statement : statements)
-        {
-            line++;
-            StrVec parsed = string_split(statement, key::TOKEN_DELIM);
-
-            // No command
-            if (parsed.size() == 0)
-            {
-                continue;
-            }
-
-            utils::DSSDelegateReturnType res = {};
-
-            for (auto command : m_loaded_commands)
-            {
-                utils::DSSDelegateReturnType opt_res = command.attempt_parse_and_exec(parsed);
-
-                if (opt_res.size() == 0)
-                {
-                    continue;
-                }
-
-                res = opt_res;
-            }
-
-            if (res.size() == 0)
-            {
-                continue;
-            }
-
-            // Successful execution
-            if (res[0] == 0)
-            {
-                continue;
-            }
-
-            // The first element of parsed is the keyword, and the first element of res is the returned value
-            find_and_push_error(parsed[0], res[0], line);
-        }
-    }
+    void direct_exec(StrVec statements);
 
     /**
      * @brief Applies automatic preprocessors.
@@ -480,19 +413,7 @@ private:
      * 
      * For example: `alias`
      */
-    void auto_preprocessors()
-    {
-        Var<std::any> *auto_preprocessor_var = m_exec_vars.get_or_add_var(AUTO_PREPROCESSOR_VAR);
-        if (auto_preprocessor_var == nullptr) {return;} // Impossible
-
-        std::vector<std::string> statements = {};
-        for (auto element : auto_preprocessor_var->get_data())
-        {
-            statements.push_back( std::any_cast<std::string>(element) );
-        }
-
-        direct_exec(statements);
-    }
+    void auto_preprocessors();
 
     /**
      * Command passes describe one singular execution of the program.
@@ -503,13 +424,7 @@ private:
      * @param statements A vector of individual command strings. These will
      * be further split into individual tokens by the command itself.
      */
-    void command_pass(DefinerDelegate definer, StrVec statements)
-    {
-        m_loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
-        definer.call(this);
-
-        direct_exec(statements);
-    }
+    void command_pass(DefinerDelegate definer, StrVec statements);
 
     /**
      * Consider this the actual executor- this will
@@ -520,23 +435,7 @@ private:
      * 
      * @return The result of executing the task.
      */
-    auto exec_task(Task task) -> utils::DSSReturnType
-    {
-        utils::DSSReturnType res = 1;
-        m_current_task = &task;
-
-        std::string &script = task.get_script();
-        StrVec statements = string_split(script, key::MULTILINE_DELIM);
-
-        command_pass(m_additional_preprocessors, statements);
-        auto_preprocessors();
-
-        statements = string_split(script, key::MULTILINE_DELIM); // Update after the preprocessors are finished
-
-        command_pass(m_additional_commands, statements);
-
-        return 0;
-    }
+    auto exec_task(Task task) -> runtime::DSSReturnType;
 
     /**
      * Executes every single task in the queue.
@@ -547,31 +446,7 @@ private:
      * @return A vector containing the result of 
      * execution for every single task.
      */
-    auto exec_all_tasks(bool recursive) -> utils::DSSDelegateReturnType
-    {
-        utils::DSSDelegateReturnType res = {};
-
-        if (m_tasks.size() == 0) {return res;}
-        if (m_busy == true) {return res;}
-        m_busy = true;
-
-        for (auto task : m_tasks)
-        {
-            exec_task(task);
-        }
-        
-        m_busy = false;
-        m_tasks.clear(); // All tasks are completed, whether successfully or not
-        if (recursive == true)
-        {
-            m_tasks.insert(m_tasks.end(), m_task_buffer.begin(), m_task_buffer.end());
-            m_task_buffer.clear();
-
-            exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION);
-        }
-
-        return res;
-    }
+    auto exec_all_tasks(bool recursive) -> runtime::DSSDelegateReturnType;
 public:
     /**
      * Produces a DSS executor.
@@ -591,10 +466,7 @@ public:
         m_id = id;
     }
 
-    void apply_error_key(ErrKey key)
-    {
-        m_lookup_error.insert(key.begin(), key.end());
-    }
+    void apply_error_key(ErrKey key);
 
     /**
      * Directly defines a DSS command, whether it be a preprocessor
@@ -602,7 +474,7 @@ public:
      * purpose of using this particular method.
      */
     void define_command(
-        utils::DSSFunc func,
+        runtime::DSSFunc func,
         std::string name,
         std::string description,
         int minimum_args = -1,
@@ -631,12 +503,7 @@ public:
      * 
      * @param script A string containing DSS script to execute
      */
-    void exec(std::string script)
-    {
-        Task task = Task(script);
-        m_tasks.push_back(task); // Append a task to the task list
-        exec_all_tasks(key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
-    }
+    void exec(std::string script);
 
     /**
      * @return A clone of the executor's RunID
@@ -663,30 +530,6 @@ public:
         return m_current_task;
     }
 };
-
-/**
- * Activates a pipeline which parses and executes
- * a statement.
- * 
- * @param inp The statement to parse
- * 
- * @param delim The delimiter to separate tokens
- */
-auto Command::attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType
-{
-    DSSDelegateReturnType res = {};
-    
-    if (tokens[0] != m_name) {return res;}
-
-    tokens.erase(tokens.begin());
-
-    std::size_t arg_count = tokens.size();
-
-    if (m_parent_ex == nullptr) {return res;}
-
-    res = m_delegate.call(m_parent_ex, tokens);
-    return res;
-}
 
 /**
  * A DSS environment. This contains
@@ -737,17 +580,7 @@ private:
      * @return An optional containing the executor, if it
      * exists.
      */
-    auto executor_by_id(RunID id) -> std::optional<Executor>
-    {
-        for (auto executor : m_executors)
-        {
-            if (executor.get_id() != id) {continue;}
-
-            return executor;
-        }
-
-        return std::nullopt;
-    }
+    auto executor_by_id(RunID id) -> std::optional<Executor>;
 
 public:
     /**
@@ -820,6 +653,8 @@ public:
 
         return m_executors[0];
     }
+};
+
 };
 
 #endif
