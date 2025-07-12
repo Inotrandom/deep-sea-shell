@@ -8,6 +8,7 @@
 
 #include "utils.h"
 #include <any>
+#include <iostream>
 #include <optional>
 
 namespace runtime {
@@ -590,6 +591,8 @@ public:
     Environment()
     {
         m_id_max = 0;
+        m_additional_commands = DefinerDelegate(32);
+        m_additional_preprocessors = DefinerDelegate(32);
     }
 
     /**
@@ -610,7 +613,7 @@ public:
      * Connect a command definer to the environment. Crucial
      * if you intend to graft commands onto DSS.
      * 
-     * @param fnuc A pointer to the definer function
+     * @param func A pointer to the definer function
      * 
      * @see Executor::connect_preprocessor_definer
      */

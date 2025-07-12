@@ -25,6 +25,7 @@ int main(int argv, char** argc)
     runtime::Environment env = runtime::Environment();
     env.connect_preprocessor_definer(lang::preprocessor_definer);
     env.connect_command_definer(lang::command_definer);
+
     env.init();
     std::optional<runtime::Executor> opt_main_executor = env.main_executor();
 
@@ -33,19 +34,10 @@ int main(int argv, char** argc)
         return 1;
     }
 
-    //std::string why = "./test.dss";
-    //std::cout << utils::file_read(why).value();
-
     runtime::Executor main_executor = opt_main_executor.value();
     main_executor.apply_error_key(lang::err_key);
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
-    main_executor.exec("alias_def TEST VALUE");
-    main_executor.exec("alias_def PROFANE expletives");
-    main_executor.exec("alias_def ANOTHER alias");
-    main_executor.exec("src ../test.dss\nout task order");
-    main_executor.exec("out $TEST");
-    main_executor.exec("src does not exist");
 
     return 0;
 }
