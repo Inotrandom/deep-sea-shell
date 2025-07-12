@@ -245,28 +245,28 @@ static std::any command_definer(runtime::Executor *exec)
 }
 
 const std::string NULL_ENVIRONMENT = "internal interpreter error, critical data unexpectedly returned null.\n\nnote: this error requires the attention of a developer";
-const runtime::ErrCodes out = {
+const runtime::ErrCodes OUT = {
     {1, NULL_ENVIRONMENT}
 };
 
-const runtime::ErrCodes src = {
+const runtime::ErrCodes SRC = {
     {1, NULL_ENVIRONMENT},
     {2, "failed to queue script, file does not exist"}
 };
 
-const runtime::ErrCodes alias_def = {
+const runtime::ErrCodes ALIAS_DEF = {
     {1, NULL_ENVIRONMENT}
 };
 
-const runtime::ErrCodes alias = {
+const runtime::ErrCodes ALIAS = {
     {1, "internal interpreter error, automatic command failure, critical data unexpectedly returned null. \n\nnote: this error requires the attention of a developer"}
 };
 
-const runtime::ErrKey err_key = {
-    {"out", out},
-    {"src", src},
-    {"alias_def", alias_def},
-    {"alias", alias}
+const runtime::ErrKey ERR_KEY = {
+    {"out", OUT},
+    {"src", SRC},
+    {"alias_def", ALIAS_DEF},
+    {"alias", ALIAS}
 };
 
 };
