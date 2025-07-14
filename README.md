@@ -30,6 +30,7 @@ Demonstrated below is a program that successfully uses DSS:
 
 ```cpp
 #include <iostream>
+#include "cli.h"
 #include "runtime.h"
 #include "lang.h"
 #include "utils.h"
@@ -53,6 +54,9 @@ int main(int argv, char** argc)
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
     
+    cli::CLI cli = cli::CLI(&main_executor);
+    cli.init();
+
     //TODO: Uncomment and run the example script
     //main_executor.exec("src ../example.dss");
 
@@ -103,3 +107,4 @@ env.connect_command_definer(example::command_definer);
 It is highly recommended to read the source code of `lang.h` for examples on the usage of DSS's grafting feature.
 
 Building and running the program will result in the example (shown above in the "Example" section) being run.
+This will open an instance of the command line interface and allow the user to directly execute Deep Sea Shell.

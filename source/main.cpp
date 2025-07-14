@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include "cli.h"
 #include "runtime.h"
 #include "lang.h"
 #include "utils.h"
@@ -26,6 +27,9 @@ int main(int argv, char** argc)
 
     main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
     
+    cli::CLI cli = cli::CLI(&main_executor);
+    cli.init();
+
     //TODO: Uncomment and run the example script
     //main_executor.exec("src ../example.dss");
 
