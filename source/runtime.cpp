@@ -15,7 +15,7 @@ void runtime::push_error(std::string what, int line)
     
     if (line > -1)
     {
-        std::cout << " on line " << line;
+        std::cout << " on line " << line + 1;
     }
 
     std::cout << std::endl;
