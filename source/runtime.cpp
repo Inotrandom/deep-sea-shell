@@ -150,7 +150,7 @@ auto runtime::Executor::exec_all_tasks(bool recursive) -> runtime::DSSDelegateRe
     return res;
 }
 
-void runtime::Executor::apply_error_key(runtime::ErrKey key)
+void runtime::Environment::apply_error_key(runtime::ErrKey key)
 {
     m_lookup_error.insert(key.begin(), key.end());
 }

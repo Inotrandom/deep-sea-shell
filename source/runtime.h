@@ -456,18 +456,17 @@ public:
      * @param additional_preprocessors Any additional preprocessor definers
      * @param additional_commands Any additional command definers
      */
-    Executor(RunID id, DefinerDelegate additional_preprocessors = DefinerDelegate(), DefinerDelegate additional_commands = DefinerDelegate())
+    Executor(RunID id, DefinerDelegate additional_preprocessors = DefinerDelegate(), DefinerDelegate additional_commands = DefinerDelegate(), ErrKey lookup_error = ErrKey())
     {
         m_loaded_commands = {};
         m_additional_preprocessors = additional_preprocessors;
         m_additional_commands = additional_commands;
         m_tasks = {};
         m_current_task = nullptr;
+        m_lookup_error = lookup_error;
 
         m_id = id;
     }
-
-    void apply_error_key(ErrKey key);
 
     /**
      * Directly defines a DSS command, whether it be a preprocessor
@@ -563,6 +562,8 @@ private:
      */
     DefinerDelegate m_additional_commands;
 
+    ErrKey m_lookup_error;
+
     /**
      * Generates a unique RunID. This is
      * useful when spawning executors.
@@ -594,6 +595,8 @@ public:
         m_additional_commands = DefinerDelegate(32);
         m_additional_preprocessors = DefinerDelegate(32);
     }
+
+    void apply_error_key(ErrKey key);
 
     /**
      * Connect a preprocessor definer to the environment. Crucial
@@ -627,7 +630,7 @@ public:
      */
     void spawn_executor()
     {
-        Executor new_executor = Executor(unique_runid(), m_additional_preprocessors, m_additional_commands);
+        Executor new_executor = Executor(unique_runid(), m_additional_preprocessors, m_additional_commands, m_lookup_error);
         m_executors.push_back(new_executor);
     }
 
