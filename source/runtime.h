@@ -286,11 +286,12 @@ public:
     auto get_var(std::string id) -> Var<std::any>*
     {
         size_t index = 0;
-        for (auto var : m_vars)
+        std::vector<Var<std::any>>::iterator itr;
+        for (itr = m_vars.begin(); itr != m_vars.end(); itr++)
         {
-            if (var.get_id() != id) {index++; continue;}
+            if (itr->get_id() != id) {index++; continue;}
 
-            return &(m_vars[index]);
+            return &(*itr);
             index++;
         }
 
