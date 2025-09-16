@@ -10,4 +10,5 @@ add_executable(
     source/cli.cpp
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 add_library(DSS source/DSS.cpp)
