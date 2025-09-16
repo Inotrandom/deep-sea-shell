@@ -26,39 +26,28 @@ These are defined in the `lang.h` file
 
 ### Example
 
-Demonstrated below is a program that successfully uses DSS:
+Demonstrated below is a program that successfully invokes DSS:
 
 ```cpp
 #include <iostream>
-#include "cli.h"
-#include "runtime.h"
-#include "lang.h"
-#include "utils.h"
+#include "DSS.h"
 
 int main(int argv, char** argc)
 {
-    runtime::Environment env = runtime::Environment();
-    env.connect_preprocessor_definer(lang::preprocessor_definer);
-    env.connect_command_definer(lang::command_definer);
-    env.apply_error_key(lang::ERR_KEY);
+    DSS::Environment env = DSS::Environment();
 
     env.init();
-    std::optional<runtime::Executor> opt_main_executor = env.main_executor();
+    std::optional<DSS::Executor> opt_main_executor = env.main_executor();
 
     if (opt_main_executor.has_value() == false)
     {
         return 1;
     }
 
-    runtime::Executor main_executor = opt_main_executor.value();
+    DSS::Executor main_executor = opt_main_executor.value();
 
-    main_executor.exec("out DSS Lovingly says \"Hello, world!\"");
-    
-    cli::CLI cli = cli::CLI(&main_executor);
-    cli.init();
-
-    //TODO: Uncomment and run the example script
-    //main_executor.exec("src ../example.dss");
+    DSS::CLI cli = DSS::CLI(&main_executor);
+    cli.init(); // TODO: Execute "src example.dss" in the console to see DSS in action
 
     return 0;
 }
@@ -68,8 +57,8 @@ int main(int argv, char** argc)
 
 Important notes:
 
-* Environment::init() should be called *after* any Environment::connect_preprocessor_definer or Environment::connect_command_definer calls, not before.
-* Currently, lang's preprocessor_definer and command_definer are not applied automatically. You must apply them yourself to use DSS.
+* Environment::init() should be called *after* any Environment::connect_preprocessor_definer or Environment::connect_command_definer calls, not before. If you intend to create executors manually, it should be done after you have connected all of your command definers.
+* Default DSS Lang features are grafted automatically upon the calling of Environment::init()
 
 ### Grafting
 
@@ -102,9 +91,9 @@ env.connect_command_definer(example::command_definer);
 
 *(Remember: it is imperative that env.init() is not called before env.connect_command_definer())*
 
-## Technical Information
+## More Information
 
-It is highly recommended to read the source code of `lang.h` for examples on the usage of DSS's grafting feature.
+It is highly recommended to read the source code of `lang.h` for documented examples on the usage of DSS's grafting feature.
 
 Building and running the program will result in the example (shown above in the "Example" section) being run.
 This will open an instance of the command line interface and allow the user to directly execute Deep Sea Shell.
