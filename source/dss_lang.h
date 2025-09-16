@@ -10,8 +10,8 @@
 #ifndef lang_h
 #define lang_h
 
-#include "utils.h" // std:vector, std::string, std::algorithm, and std::iterator
-#include "runtime.h" // std::any and std::optional
+#include "utils.h"
+#include "DSS.h"
 
 #include <iostream>
 #include <filesystem>
@@ -69,10 +69,10 @@ typedef std::vector<Alias> AliasVarData;
  * this function will never get called. Consequently,
  * the `alias` preprocessor will never become automatic.
  */
-inline void use_alias(runtime::Executor* p_ex)
+inline void use_alias(DSS::Executor* p_ex)
 {
-    runtime::Vars &vars = p_ex->get_vars();
-    runtime::Var<std::any> *auto_preproc_var = vars.get_or_add_var(runtime::AUTO_PREPROCESSOR_VAR);
+    DSS::Vars &vars = p_ex->get_vars();
+    DSS::Var<std::any> *auto_preproc_var = vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
 
     if (auto_preproc_var == nullptr) {return;}
 
@@ -94,10 +94,10 @@ inline void use_alias(runtime::Executor* p_ex)
  * 
  * @param data The data of the alias
  */
-inline auto create_alias(runtime::Executor* p_ex, std::string id, std::string data) -> runtime::DSSReturnType
+inline auto create_alias(DSS::Executor* p_ex, std::string id, std::string data) -> DSS::DSSReturnType
 {
-    runtime::Vars &vars = p_ex->get_vars();
-    runtime::Var<std::any> *alias_var = vars.get_or_add_var(ALIAS_VAR);
+    DSS::Vars &vars = p_ex->get_vars();
+    DSS::Var<std::any> *alias_var = vars.get_or_add_var(ALIAS_VAR);
 
     if (alias_var == nullptr) {return 1;}
     
@@ -117,7 +117,7 @@ namespace func
     /**
      * Out will push arguments into the stdout stream.
      */
-    inline auto out(runtime::Executor* p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
+    inline auto out(DSS::Executor* p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
@@ -135,7 +135,7 @@ namespace func
     /**
      * Alias Define will define an alias and call `use_alias`
      */
-    inline auto alias_def(runtime::Executor* p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
+    inline auto alias_def(DSS::Executor* p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
@@ -157,15 +157,15 @@ namespace func
      * Alias will apply defined aliases throughout
      * the script lazily.
      */
-    inline auto alias(runtime::Executor* p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
+    inline auto alias(DSS::Executor* p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
-        runtime::Task *p_current_task = p_ex->get_current_task();
+        DSS::Task *p_current_task = p_ex->get_current_task();
         if (p_current_task == nullptr) {return 1;}
 
-        runtime::Vars &vars = p_ex->get_vars();
-        runtime::Var<std::any> *alias_var = vars.get_var(ALIAS_VAR);
+        DSS::Vars &vars = p_ex->get_vars();
+        DSS::Var<std::any> *alias_var = vars.get_var(ALIAS_VAR);
         if (alias_var == nullptr) {return 1;}
 
         std::string &script = p_current_task->get_script();
@@ -181,7 +181,7 @@ namespace func
         return 0;
     }
 
-    inline auto source(runtime::Executor *p_ex, runtime::DSSFuncArgs args) -> runtime::DSSReturnType
+    inline auto source(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
         if (p_ex == nullptr) {return 1;}
 
@@ -192,7 +192,7 @@ namespace func
 
         if (res.has_value() == false) {return 2;}
 
-        runtime::Task task = runtime::Task(res.value());
+        DSS::Task task = DSS::Task(res.value());
         p_ex->queue_task(task);
 
         return 0;
@@ -202,7 +202,7 @@ namespace func
 /**
  * Definer for `lang` preprocessors
  */
-static std::any preprocessor_definer(runtime::Executor *exec)
+static std::any preprocessor_definer(DSS::Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
 
@@ -231,7 +231,7 @@ static std::any preprocessor_definer(runtime::Executor *exec)
 /**
  * Definer for `command` preprocessors
  */
-static std::any command_definer(runtime::Executor *exec)
+static std::any command_definer(DSS::Executor *exec)
 {
     if (exec == nullptr) {return NULL;}
 
@@ -245,24 +245,24 @@ static std::any command_definer(runtime::Executor *exec)
 }
 
 const std::string NULL_ENVIRONMENT = "internal interpreter error, critical data unexpectedly returned null.\n\nnote: this error requires the attention of a developer";
-const runtime::ErrCodes OUT = {
+const DSS::ErrCodes OUT = {
     {1, NULL_ENVIRONMENT}
 };
 
-const runtime::ErrCodes SRC = {
+const DSS::ErrCodes SRC = {
     {1, NULL_ENVIRONMENT},
     {2, "failed to queue script, file does not exist"}
 };
 
-const runtime::ErrCodes ALIAS_DEF = {
+const DSS::ErrCodes ALIAS_DEF = {
     {1, NULL_ENVIRONMENT}
 };
 
-const runtime::ErrCodes ALIAS = {
+const DSS::ErrCodes ALIAS = {
     {1, "internal interpreter error, automatic command failure, critical data unexpectedly returned null. \n\nnote: this error requires the attention of a developer"}
 };
 
-const runtime::ErrKey ERR_KEY = {
+const DSS::ErrKey ERR_KEY = {
     {"out", OUT},
     {"src", SRC},
     {"alias_def", ALIAS_DEF},

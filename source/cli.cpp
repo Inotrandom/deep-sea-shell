@@ -12,19 +12,19 @@ static void console_clear()
     #endif
 }
 
-void cli::CLI::init()
+void DSS::CLI::init()
 {
     console_clear();
     input_loop();
 }
 
-void cli::CLI::execute(std::string what)
+void DSS::CLI::execute(std::string what)
 {
     if (m_bound_executor == nullptr) {return;}
     m_bound_executor->exec(what);
 }
 
-void cli::CLI::input_loop()
+void DSS::CLI::input_loop()
 {
     while (m_alive == true)
     {

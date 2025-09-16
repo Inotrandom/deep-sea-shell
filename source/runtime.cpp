@@ -1,15 +1,22 @@
 /**
- * Within this file are DSS Runtime utilities.
- * It is critical to include this file to
- * use DSS.
+ * @file DSS.cpp
+ * @author Yevgenya Coonan (yacoonan@gmail.com)
+ * @brief Deep Sea Shell runtime
+ * @version 1.1.0
+ * @date 2025-09-15
+ * 
+ * @copyright Copyright (c) 2025
+ * 
  */
 #include "utils.h"
 #include "runtime.h"
+#include "cli.h"
+#include "dss_lang.h"
 #include <any>
 #include <optional>
 #include <iostream>
 
-void runtime::push_error(std::string what, int line)
+void DSS::push_error(std::string what, int line)
 {
     std::cout << std::endl << "error: a critical exception occurred";
     
@@ -22,31 +29,31 @@ void runtime::push_error(std::string what, int line)
     std::cout << what << std::endl;
 }
 
-void runtime::Executor::find_and_push_error(std::string command, int code, int line)
+void DSS::Executor::find_and_push_error(std::string command, int code, int line)
 {
     try
     {
-        runtime::ErrCodes found = m_lookup_error.at(command);
+        DSS::ErrCodes found = m_lookup_error.at(command);
 
         std::string error = found.at(code);
 
-        runtime::push_error(error, line);
+        DSS::push_error(error, line);
     }
     catch (std::out_of_range &_e)
     {
-        runtime::push_error(runtime::err::UNKNOWN, line);
+        DSS::push_error(DSS::err::UNKNOWN, line);
         return;
     }
 }
 
-void runtime::Executor::direct_exec(runtime::StrVec statements)
+void DSS::Executor::direct_exec(DSS::StrVec statements)
 {
     int line = -1;
 
     for (auto statement : statements)
     {
         line++;
-        runtime::StrVec parsed = string_split(statement, runtime::key::TOKEN_DELIM);
+        DSS::StrVec parsed = string_split(statement, DSS::key::TOKEN_DELIM);
 
         // No command
         if (parsed.size() == 0)
@@ -54,11 +61,11 @@ void runtime::Executor::direct_exec(runtime::StrVec statements)
             continue;
         }
 
-        runtime::DSSDelegateReturnType res = {};
+        DSS::DSSDelegateReturnType res = {};
 
         for (auto command : m_loaded_commands)
         {
-            runtime::DSSDelegateReturnType opt_res = command.attempt_parse_and_exec(parsed);
+            DSS::DSSDelegateReturnType opt_res = command.attempt_parse_and_exec(parsed);
 
             if (opt_res.size() == 0)
             {
@@ -84,9 +91,9 @@ void runtime::Executor::direct_exec(runtime::StrVec statements)
     }
 }
 
-void runtime::Executor::auto_preprocessors()
+void DSS::Executor::auto_preprocessors()
 {
-    runtime::Var<std::any> *auto_preprocessor_var = m_exec_vars.get_or_add_var(runtime::AUTO_PREPROCESSOR_VAR);
+    DSS::Var<std::any> *auto_preprocessor_var = m_exec_vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
     if (auto_preprocessor_var == nullptr) {return;} // Impossible
 
     std::vector<std::string> statements = {};
@@ -98,7 +105,7 @@ void runtime::Executor::auto_preprocessors()
     direct_exec(statements);
 }
 
-void runtime::Executor::command_pass(runtime::DefinerDelegate definer, runtime::StrVec statements)
+void DSS::Executor::command_pass(DSS::DefinerDelegate definer, DSS::StrVec statements)
 {
     m_loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
     definer.call(this);
@@ -106,27 +113,27 @@ void runtime::Executor::command_pass(runtime::DefinerDelegate definer, runtime::
     direct_exec(statements);
 }
 
-auto runtime::Executor::exec_task(runtime::Task task) -> runtime::DSSReturnType
+auto DSS::Executor::exec_task(DSS::Task task) -> DSS::DSSReturnType
 {
-    runtime::DSSReturnType res = 1;
+    DSS::DSSReturnType res = 1;
     m_current_task = &task;
 
     std::string &script = task.get_script();
-    runtime::StrVec statements = string_split(script, runtime::key::MULTILINE_DELIM);
+    DSS::StrVec statements = string_split(script, DSS::key::MULTILINE_DELIM);
 
     command_pass(m_additional_preprocessors, statements);
     auto_preprocessors();
 
-    statements = string_split(script, runtime::key::MULTILINE_DELIM); // Update after the preprocessors are finished
+    statements = string_split(script, DSS::key::MULTILINE_DELIM); // Update after the preprocessors are finished
 
     command_pass(m_additional_commands, statements);
 
     return 0;
 }
 
-auto runtime::Executor::exec_all_tasks(bool recursive) -> runtime::DSSDelegateReturnType
+auto DSS::Executor::exec_all_tasks(bool recursive) -> DSS::DSSDelegateReturnType
 {
-    runtime::DSSDelegateReturnType res = {};
+    DSS::DSSDelegateReturnType res = {};
 
     if (m_tasks.size() == 0) {return res;}
     if (m_busy == true) {return res;}
@@ -144,25 +151,25 @@ auto runtime::Executor::exec_all_tasks(bool recursive) -> runtime::DSSDelegateRe
         m_tasks.insert(m_tasks.end(), m_task_buffer.begin(), m_task_buffer.end());
         m_task_buffer.clear();
 
-        exec_all_tasks(runtime::key::FLAG_RECURSIVE_EXECUTION);
+        exec_all_tasks(DSS::key::FLAG_RECURSIVE_EXECUTION);
     }
 
     return res;
 }
 
-void runtime::Environment::apply_error_key(runtime::ErrKey key)
+void DSS::Environment::apply_error_key(DSS::ErrKey key)
 {
     m_lookup_error.insert(key.begin(), key.end());
 }
 
-void runtime::Executor::exec(std::string script)
+void DSS::Executor::exec(std::string script)
 {
-    runtime::Task task = runtime::Task(script);
+    DSS::Task task = DSS::Task(script);
     m_tasks.push_back(task); // Append a task to the task list
-    exec_all_tasks(runtime::key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
+    exec_all_tasks(DSS::key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
 }
 
-auto runtime::Environment::executor_by_id(runtime::RunID id) -> std::optional<Executor>
+auto DSS::Environment::executor_by_id(DSS::RunID id) -> std::optional<Executor>
 {
     for (auto executor : m_executors)
     {
@@ -174,6 +181,14 @@ auto runtime::Environment::executor_by_id(runtime::RunID id) -> std::optional<Ex
     return std::nullopt;
 }
 
+void DSS::Environment::init()
+{
+    connect_preprocessor_definer(lang::preprocessor_definer);
+    connect_command_definer(lang::command_definer);
+    
+    spawn_executor();
+}
+
 /**
  * Activates a pipeline which parses and executes
  * a statement.
@@ -182,7 +197,7 @@ auto runtime::Environment::executor_by_id(runtime::RunID id) -> std::optional<Ex
  * 
  * @param delim The delimiter to separate tokens
  */
-auto runtime::Command::attempt_parse_and_exec(runtime::StrVec tokens) -> DSSDelegateReturnType
+auto DSS::Command::attempt_parse_and_exec(DSS::StrVec tokens) -> DSSDelegateReturnType
 {
     DSSDelegateReturnType res = {};
     

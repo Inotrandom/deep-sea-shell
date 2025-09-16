@@ -1,8 +1,3 @@
-/**
- * Within this file are DSS Runtime utilities.
- * It is critical to include this file to
- * use DSS.
- */
 #ifndef runtime_h
 #define runtime_h
 
@@ -10,8 +5,9 @@
 #include <any>
 #include <iostream>
 #include <optional>
+#include <compare>
 
-namespace runtime {
+namespace DSS {
 
 void push_error(std::string what, int line = -1);
 
@@ -437,7 +433,7 @@ private:
      * 
      * @return The result of executing the task.
      */
-    auto exec_task(Task task) -> runtime::DSSReturnType;
+    auto exec_task(Task task) -> DSS::DSSReturnType;
 
     /**
      * Executes every single task in the queue.
@@ -448,7 +444,7 @@ private:
      * @return A vector containing the result of 
      * execution for every single task.
      */
-    auto exec_all_tasks(bool recursive) -> runtime::DSSDelegateReturnType;
+    auto exec_all_tasks(bool recursive) -> DSS::DSSDelegateReturnType;
 public:
     /**
      * Produces a DSS executor.
@@ -475,7 +471,7 @@ public:
      * purpose of using this particular method.
      */
     void define_command(
-        runtime::DSSFunc func,
+        DSS::DSSFunc func,
         std::string name,
         std::string description,
         int minimum_args = -1,
@@ -640,10 +636,7 @@ public:
      * environment function. This method serves as an exemplary starting
      * point for working with DSS.
      */
-    void init()
-    {
-        spawn_executor();
-    }
+    void init();
 
     /**
      * Retrieves executor `0` (RunID), also known as the root ("main") executor.

@@ -4,15 +4,15 @@
 #ifndef CLI_H
 #define CLI_H
 
-namespace cli {
+namespace DSS {
 
 class CLI
 {
 private:
-    runtime::Executor *m_bound_executor;
+    DSS::Executor *m_bound_executor;
     bool m_alive;
 public:
-    CLI(runtime::Executor *bound_executor)
+    CLI(DSS::Executor *bound_executor)
     {
         if (bound_executor == nullptr) {return;}
         m_bound_executor = bound_executor;
