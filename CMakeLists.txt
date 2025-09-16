@@ -9,3 +9,5 @@ add_executable(
     source/runtime.cpp
     source/cli.cpp
 )
+
+add_library(DSS source/DSS.cpp)
