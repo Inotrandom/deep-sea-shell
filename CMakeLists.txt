@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28.3)
+cmake_minimum_required(VERSION 3.25.1)
 
 project(DeepSeaShell)
 set(CMAKE_CXX_STANDARD 20)
