@@ -1,5 +1,7 @@
 #include "cli.h"
+#include <filesystem>
 #include <iostream>
+#include <fstream>
 
 static void console_clear()
 {
@@ -28,7 +30,7 @@ void DSS::CLI::input_loop()
 {
     while (m_alive == true)
     {
-        std::cout << "dss >>>";
+        std::cout << "\033[34m" << std::filesystem::current_path().string() << "\033[0m \033[35m" << m_name << "\033[0m \033[1m \033[32m>>>\033[0m ";
         std::string retrieved; 
         getline(std::cin, retrieved);
 
