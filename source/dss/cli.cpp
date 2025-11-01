@@ -36,7 +36,12 @@ void DSS::CLI::input_loop()
 
         if (retrieved == "exit")
         {
+            console_clear();
             m_alive = false;
+        }
+        else if (retrieved == "clear")
+        {
+            console_clear();
         }
 
         execute(retrieved);
