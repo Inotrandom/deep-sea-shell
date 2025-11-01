@@ -69,7 +69,7 @@ void DSS::Executor::direct_exec(DSS::StrVec statements)
 
             if (opt_res.size() == 0)
             {
-                continue;
+                continue; // Failed to parse
             }
 
             res = opt_res;
@@ -77,7 +77,7 @@ void DSS::Executor::direct_exec(DSS::StrVec statements)
 
         if (res.size() == 0)
         {
-            continue;
+            continue; // Command does not exist
         }
 
         // Successful execution
@@ -93,7 +93,7 @@ void DSS::Executor::direct_exec(DSS::StrVec statements)
 
 void DSS::Executor::auto_preprocessors()
 {
-    DSS::Var<std::any> *auto_preprocessor_var = m_exec_vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
+    std::shared_ptr<DSS::Var<std::any>> auto_preprocessor_var = m_exec_vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
     if (auto_preprocessor_var == nullptr) {return;} // Impossible
 
     std::vector<std::string> statements = {};

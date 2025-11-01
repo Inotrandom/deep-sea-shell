@@ -72,7 +72,7 @@ typedef std::vector<Alias> AliasVarData;
 inline void use_alias(DSS::Executor* p_ex)
 {
     DSS::Vars &vars = p_ex->get_vars();
-    DSS::Var<std::any> *auto_preproc_var = vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
+    std::shared_ptr<DSS::Var<std::any>> auto_preproc_var = vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
 
     if (auto_preproc_var == nullptr) {return;}
 
@@ -97,7 +97,7 @@ inline void use_alias(DSS::Executor* p_ex)
 inline auto create_alias(DSS::Executor* p_ex, std::string id, std::string data) -> DSS::DSSReturnType
 {
     DSS::Vars &vars = p_ex->get_vars();
-    DSS::Var<std::any> *alias_var = vars.get_or_add_var(ALIAS_VAR);
+    std::shared_ptr<DSS::Var<std::any>> alias_var = vars.get_or_add_var(ALIAS_VAR);
 
     if (alias_var == nullptr) {return 1;}
     
@@ -119,8 +119,6 @@ namespace func
      */
     inline auto out(DSS::Executor* p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
-        if (p_ex == nullptr) {return 1;}
-
         for (auto argument : args)
         {
             std::cout << argument;
@@ -137,8 +135,6 @@ namespace func
      */
     inline auto alias_def(DSS::Executor* p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
-        if (p_ex == nullptr) {return 1;}
-
         use_alias(p_ex); // Aliases are in use!
 
         std::string id = args[0];
@@ -159,13 +155,11 @@ namespace func
      */
     inline auto alias(DSS::Executor* p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
-        if (p_ex == nullptr) {return 1;}
-
         DSS::Task *p_current_task = p_ex->get_current_task();
         if (p_current_task == nullptr) {return 1;}
 
         DSS::Vars &vars = p_ex->get_vars();
-        DSS::Var<std::any> *alias_var = vars.get_var(ALIAS_VAR);
+        std::shared_ptr<DSS::Var<std::any>> alias_var = vars.get_var(ALIAS_VAR);
         if (alias_var == nullptr) {return 1;}
 
         std::string &script = p_current_task->get_script();
@@ -183,8 +177,6 @@ namespace func
 
     inline auto source(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
     {
-        if (p_ex == nullptr) {return 1;}
-
         std::optional<std::string> res = utils::file_read(args[0]);
 
         //std::cout << std::filesystem::current_path();
@@ -204,8 +196,6 @@ namespace func
  */
 static std::any preprocessor_definer(DSS::Executor *exec)
 {
-    if (exec == nullptr) {return NULL;}
-
     exec->define_command(
         func::source,
         "src",
@@ -233,8 +223,6 @@ static std::any preprocessor_definer(DSS::Executor *exec)
  */
 static std::any command_definer(DSS::Executor *exec)
 {
-    if (exec == nullptr) {return NULL;}
-
     exec->define_command(
         func::out,
         "out",

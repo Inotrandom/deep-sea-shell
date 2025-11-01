@@ -103,7 +103,7 @@ public:
     auto attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType;
 
 private:
-    Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate{0};
+    Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate{32};
     std::string m_name{""};
     std::string m_description{""};
     int64_t m_minimum_args{-1};
@@ -265,7 +265,7 @@ public:
     {
         if (has_var(id) == true) {return;}
 
-        Var new_var = Var<std::any>(id, data);
+        std::shared_ptr<Var<std::any>> new_var = std::make_shared<Var<std::any>>(id, data);
 
         m_vars.push_back(new_var);
     }
@@ -276,16 +276,25 @@ public:
      * @return A pointer to a generic (`std::any`) variable.
      * Will be `nullptr` if the variable is not found!
      */
-    auto get_var(std::string id) -> Var<std::any>*
+    auto get_var(std::string id) -> std::shared_ptr<Var<std::any>>
     {
+        /*
         size_t index = 0;
-        std::vector<Var<std::any>>::iterator itr;
+        std::vector<std::shared_ptr<Var<std::any>>>::iterator itr;
         for (itr = m_vars.begin(); itr != m_vars.end(); itr++)
         {
             if (itr->get_id() != id) {index++; continue;}
 
             return &(*itr);
             index++;
+        }
+        */
+
+        for (auto var : m_vars)
+        {
+            if (var->get_id() != id) continue;
+
+            return var;
         }
 
         return nullptr;
@@ -298,9 +307,9 @@ public:
      * @return A pointer to the variable. This should
      * be safe to rely on.
      */
-    auto get_or_add_var(std::string id) -> Var<std::any>*
+    auto get_or_add_var(std::string id) -> std::shared_ptr<Var<std::any>>
     {
-        Var<std::any> *p_res = get_var(id);
+        std::shared_ptr<Var<std::any>> p_res = get_var(id);
 
         if (p_res == nullptr)
         {
@@ -326,7 +335,7 @@ private:
     /**
      * A vector of generic (`std::any`) environment variables
      */
-    std::vector<Var<std::any>> m_vars;
+    std::vector<std::shared_ptr<Var<std::any>>> m_vars;
 };
 
 /**
@@ -560,7 +569,6 @@ public:
      */
     void connect_preprocessor_definer(const Definer func)
     {
-        if (func == nullptr) {return;}
         m_additional_preprocessors.connect(func);
     }
 
