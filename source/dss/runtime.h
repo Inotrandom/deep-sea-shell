@@ -6,8 +6,11 @@
 #include <iostream>
 #include <optional>
 #include <compare>
+#include <memory>
 
 namespace DSS {
+
+using namespace DSS;
 
 void push_error(std::string what, int line = -1);
 
@@ -56,14 +59,6 @@ typedef std::vector<DSSReturnType> DSSDelegateReturnType;
  */
 class Command
 {
-private:
-    Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate;
-    std::string m_name;
-    std::string m_description;
-    int64_t m_minimum_args;
-    int64_t m_maximum_args;
-    Executor* m_parent_ex;
-
 public:
     /**
      * @param name Keyword for the command. This will determine
@@ -106,6 +101,14 @@ public:
      * @see DSSDelegate::call
      */
     auto attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType;
+
+private:
+    Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate{0};
+    std::string m_name{""};
+    std::string m_description{""};
+    int64_t m_minimum_args{-1};
+    int64_t m_maximum_args{-1};
+    Executor* m_parent_ex{nullptr};
 };
 
 namespace err
@@ -131,31 +134,31 @@ namespace key
  */
 class Task
 {
-private:
+    public:
     /**
-     * The physical DSS script inside
-     * the task
-     */
-    std::string m_script;
-public:
-    /**
-     * Constructs a task.
-     * 
-     * @param script The script contents of the task
-     */
+    * Constructs a task.
+    * 
+    * @param script The script contents of the task
+    */
     Task(const std::string script)
     {
         m_script = script;
     }
-
+    
     /** 
-     * @return A reference to the script of the task.
-     * Mutability is intentional.
-     */
+    * @return A reference to the script of the task.
+    * Mutability is intentional.
+    */
     auto get_script() -> std::string&
     {
         return m_script;
     }
+private:
+    /**
+    * The physical DSS script inside
+    * the task
+    */
+    std::string m_script{""};
 };
 
 typedef std::any (*Definer)(Executor*);
@@ -164,16 +167,6 @@ typedef utils::Delegate<Definer, Executor*, std::vector<std::any>> DefinerDelega
 template<typename T>
 class Var
 {
-private:
-    /**
-     * The id of the variable.
-     */
-    std::string m_id;
-
-    /**
-     * The data of the variable
-     */
-    std::vector<T> m_data;
 public:
     /**
      * Constructs an environment variable.
@@ -239,18 +232,22 @@ public:
         
         return;
     }
+private:
+    /**
+     * The id of the variable.
+     */
+    std::string m_id;
+
+    /**
+     * The data of the variable
+     */
+    std::vector<T> m_data;
 };
 
 const std::string AUTO_PREPROCESSOR_VAR = "auto_preprocessor";
 
 class Vars
 {
-private:
-    /**
-     * A vector of generic (`std::any`) environment variables
-     */
-    std::vector<Var<std::any>> m_vars;
-
 public:
     /**
      * Creates an environment variable
@@ -325,6 +322,11 @@ public:
         if (get_var(id) != nullptr) {return true;}
         return false;
     }
+private:
+    /**
+     * A vector of generic (`std::any`) environment variables
+     */
+    std::vector<Var<std::any>> m_vars;
 };
 
 /**
@@ -332,6 +334,87 @@ public:
  */
 class Executor
 {
+public:
+    /**
+     * Produces a DSS executor.
+     * 
+     * @param id The unique RunID of this particular executor.
+     * @param additional_preprocessors Any additional preprocessor definers
+     * @param additional_commands Any additional command definers
+     */
+    Executor(RunID id, DefinerDelegate additional_preprocessors = DefinerDelegate(), DefinerDelegate additional_commands = DefinerDelegate(), ErrKey lookup_error = ErrKey())
+    {
+        m_loaded_commands = {};
+        m_additional_preprocessors = additional_preprocessors;
+        m_additional_commands = additional_commands;
+        m_tasks = {};
+        m_current_task = nullptr;
+        m_lookup_error = lookup_error;
+
+        m_id = id;
+    }
+
+    /**
+     * Directly defines a DSS command, whether it be a preprocessor
+     * or an ordinary command. Definer functions exist with the sole
+     * purpose of using this particular method.
+     */
+    void define_command(
+        DSS::DSSFunc func,
+        std::string name,
+        std::string description,
+        int minimum_args = -1,
+        int maximum_args = -1
+    )
+    {
+
+        Command res = Command(func, name, description, minimum_args, maximum_args, this);
+        m_loaded_commands.push_back(res);
+    }
+
+    /**
+     * Queues a task while the executor is busy.
+     */
+    void queue_task(Task task)
+    {
+        m_task_buffer.push_back(task);
+    }
+
+    /**
+     * Execute a DSS script. This is the
+     * intended solution for beginning task execution
+     * 
+     * When given input, the environment will create a task, then execute the task
+     * after it is finished with all previous (older) tasks.
+     * 
+     * @param script A string containing DSS script to execute
+     */
+    void exec(std::string script);
+
+    /**
+     * @return A clone of the executor's RunID
+     */
+    auto get_id() -> RunID
+    {
+        return m_id;
+    }
+
+    /**
+     * @return A reference to this executor's environment `Vars`.
+     */
+    auto get_vars() -> Vars&
+    {
+        return m_exec_vars;
+    }
+
+    /**
+     * @return A pointer to the currently procesing task.
+     * This may be null!
+     */
+    auto get_current_task() -> Task*
+    {
+        return m_current_task;
+    }
 private:
     /**
      * Every command currently working for this
@@ -445,87 +528,6 @@ private:
      * execution for every single task.
      */
     auto exec_all_tasks(bool recursive) -> DSS::DSSDelegateReturnType;
-public:
-    /**
-     * Produces a DSS executor.
-     * 
-     * @param id The unique RunID of this particular executor.
-     * @param additional_preprocessors Any additional preprocessor definers
-     * @param additional_commands Any additional command definers
-     */
-    Executor(RunID id, DefinerDelegate additional_preprocessors = DefinerDelegate(), DefinerDelegate additional_commands = DefinerDelegate(), ErrKey lookup_error = ErrKey())
-    {
-        m_loaded_commands = {};
-        m_additional_preprocessors = additional_preprocessors;
-        m_additional_commands = additional_commands;
-        m_tasks = {};
-        m_current_task = nullptr;
-        m_lookup_error = lookup_error;
-
-        m_id = id;
-    }
-
-    /**
-     * Directly defines a DSS command, whether it be a preprocessor
-     * or an ordinary command. Definer functions exist with the sole
-     * purpose of using this particular method.
-     */
-    void define_command(
-        DSS::DSSFunc func,
-        std::string name,
-        std::string description,
-        int minimum_args = -1,
-        int maximum_args = -1
-    )
-    {
-
-        Command res = Command(func, name, description, minimum_args, maximum_args, this);
-        m_loaded_commands.push_back(res);
-    }
-
-    /**
-     * Queues a task while the executor is busy.
-     */
-    void queue_task(Task task)
-    {
-        m_task_buffer.push_back(task);
-    }
-
-    /**
-     * Execute a DSS script. This is the
-     * intended solution for beginning task execution
-     * 
-     * When given input, the environment will create a task, then execute the task
-     * after it is finished with all previous (older) tasks.
-     * 
-     * @param script A string containing DSS script to execute
-     */
-    void exec(std::string script);
-
-    /**
-     * @return A clone of the executor's RunID
-     */
-    auto get_id() -> RunID
-    {
-        return m_id;
-    }
-
-    /**
-     * @return A reference to this executor's environment `Vars`.
-     */
-    auto get_vars() -> Vars&
-    {
-        return m_exec_vars;
-    }
-
-    /**
-     * @return A pointer to the currently procesing task.
-     * This may be null!
-     */
-    auto get_current_task() -> Task*
-    {
-        return m_current_task;
-    }
 };
 
 /**
@@ -534,53 +536,6 @@ public:
  */
 class Environment
 {
-private:
-    /**
-     * The maximum executor ID.
-     * This is incremented every time an executor
-     * is created in order to ensure executors have
-     * unique ids.
-     */
-    RunID m_id_max;
-
-    /**
-     * A vector of every executor that is
-     * currently alive in this environment.
-     */
-    std::vector<Executor> m_executors;
-
-    /**
-     * Definer delegate containing additional preprocessor definers.
-     */
-    DefinerDelegate m_additional_preprocessors;
-
-    /**
-     * Definer delegate containing additional command definers.
-     */
-    DefinerDelegate m_additional_commands;
-
-    ErrKey m_lookup_error;
-
-    /**
-     * Generates a unique RunID. This is
-     * useful when spawning executors.
-     */
-    auto unique_runid() -> RunID
-    {
-        return m_id_max;
-        m_id_max++;
-    }
-
-    /**
-     * Lazily retrieves the executor with RunID `id`.
-     * 
-     * @param id The id of the executor to attempt and find
-     * 
-     * @return An optional containing the executor, if it
-     * exists.
-     */
-    auto executor_by_id(RunID id) -> std::optional<Executor>;
-
 public:
     /**
      * Constructs an environment with a default
@@ -653,6 +608,52 @@ public:
 
         return m_executors[0];
     }
+private:
+    /**
+     * The maximum executor ID.
+     * This is incremented every time an executor
+     * is created in order to ensure executors have
+     * unique ids.
+     */
+    RunID m_id_max;
+
+    /**
+     * A vector of every executor that is
+     * currently alive in this environment.
+     */
+    std::vector<Executor> m_executors;
+
+    /**
+     * Definer delegate containing additional preprocessor definers.
+     */
+    DefinerDelegate m_additional_preprocessors;
+
+    /**
+     * Definer delegate containing additional command definers.
+     */
+    DefinerDelegate m_additional_commands;
+
+    ErrKey m_lookup_error;
+
+    /**
+     * Generates a unique RunID. This is
+     * useful when spawning executors.
+     */
+    auto unique_runid() -> RunID
+    {
+        return m_id_max;
+        m_id_max++;
+    }
+
+    /**
+     * Lazily retrieves the executor with RunID `id`.
+     * 
+     * @param id The id of the executor to attempt and find
+     * 
+     * @return An optional containing the executor, if it
+     * exists.
+     */
+    auto executor_by_id(RunID id) -> std::optional<Executor>;
 };
 
 };
