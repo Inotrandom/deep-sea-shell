@@ -2,10 +2,11 @@
 
 ## Brief
 
-DSS is a high-level data-oriented operative programming language. Among others,
-its primary purpose is for communication and control of robotic systems.
-DSS is intended to exist as both an effective means of storing, parsing, and
-using data, but also as a simple tool for operating systems.
+DSS is a high-level data-oriented operative scripting language. Among others,
+its primary purpose is for communication and control of robotic systems. Quite literally,
+it is a parsing utility for more-complicated command line interfaces.
+
+Unlike JSon or TOML, it serves as a directly executable format.
 
 DSS is designed not just for human users, but also for systems to universally
 send/recieve data packets on a network.
