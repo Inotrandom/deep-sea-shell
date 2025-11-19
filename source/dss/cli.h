@@ -1,9 +1,9 @@
-#include "runtime.h"
 #include <string>
+
+#include "runtime.h"
 
 #ifndef CLI_H
 #define CLI_H
-
 
 namespace DSS {
 

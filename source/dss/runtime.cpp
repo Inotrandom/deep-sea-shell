@@ -2,7 +2,7 @@
  * @file DSS.cpp
  * @author Yevgenya Coonan (yacoonan@gmail.com)
  * @brief Deep Sea Shell runtime
- * @version 1.1.0
+ * @version 1.1.1
  * @date 2025-09-15
  * 
  * @copyright Copyright (c) 2025
@@ -10,7 +10,6 @@
  */
 #include "utils.h"
 #include "runtime.h"
-#include "cli.h"
 #include "dss_lang.h"
 #include <any>
 #include <optional>
@@ -53,7 +52,7 @@ void DSS::Executor::direct_exec(DSS::StrVec statements)
     for (auto statement : statements)
     {
         line++;
-        DSS::StrVec parsed = string_split(statement, DSS::key::TOKEN_DELIM);
+        DSS::StrVec parsed = utils::string_split(statement, DSS::key::TOKEN_DELIM);
 
         // No command
         if (parsed.size() == 0)
@@ -119,12 +118,12 @@ auto DSS::Executor::exec_task(DSS::Task task) -> DSS::DSSReturnType
     m_current_task = &task;
 
     std::string &script = task.get_script();
-    DSS::StrVec statements = string_split(script, DSS::key::MULTILINE_DELIM);
+    DSS::StrVec statements = utils::string_split(script, DSS::key::MULTILINE_DELIM);
 
     command_pass(m_additional_preprocessors, statements);
     auto_preprocessors();
 
-    statements = string_split(script, DSS::key::MULTILINE_DELIM); // Update after the preprocessors are finished
+    statements = utils::string_split(script, DSS::key::MULTILINE_DELIM); // Update after the preprocessors are finished
 
     command_pass(m_additional_commands, statements);
 

@@ -5,8 +5,8 @@
  * function of DSS, then it likely belongs here.
  */
 
-#ifndef utils
-#define utils
+#ifndef H_UTILS
+#define H_UTILS
 
 #include <vector>
 #include <string>

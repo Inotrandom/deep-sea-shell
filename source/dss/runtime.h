@@ -6,6 +6,7 @@
 #include <optional>
 #include <compare>
 #include <memory>
+#include "utils.h"
 
 namespace DSS {
 
@@ -102,7 +103,7 @@ public:
     auto attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType;
 
 private:
-    Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate{32};
+    utils::Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate{32};
     std::string m_name{""};
     std::string m_description{""};
     int64_t m_minimum_args{-1};

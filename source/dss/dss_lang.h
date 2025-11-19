@@ -131,6 +131,17 @@ namespace func
     }
 
     /**
+     * @brief This will set the filesystem.current_directory using argument 1
+     */
+    inline auto curdir(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+    {
+        if (std::filesystem::exists(args[0]) == false) return 1;
+        std::filesystem::current_path(args[0]);
+
+        return 0;
+    }
+
+    /**
      * Alias Define will define an alias and call `use_alias`
      */
     inline auto alias_def(DSS::Executor* p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
@@ -169,7 +180,7 @@ namespace func
             Alias alias = std::any_cast<Alias>(element);
             
             std::string deref = ALIAS_DEREF + alias.id;
-            string_replace(script, deref, alias.value);
+            utils::string_replace(script, deref, alias.value);
         }
 
         return 0;
@@ -229,6 +240,12 @@ static std::any command_definer(DSS::Executor *exec)
         "outputs to console"
     );
 
+    exec->define_command(
+        func::curdir,
+        "cd",
+        "changes the current directory"
+    );
+
     return NULL;
 }
 
@@ -250,11 +267,16 @@ const DSS::ErrCodes ALIAS = {
     {1, "internal interpreter error, automatic command failure, critical data unexpectedly returned null. \n\nnote: this error requires the attention of a developer"}
 };
 
+const DSS::ErrCodes CURDIR = {
+    {1, "file does not exist"}
+};
+
 const DSS::ErrKey ERR_KEY = {
     {"out", OUT},
     {"src", SRC},
     {"alias_def", ALIAS_DEF},
-    {"alias", ALIAS}
+    {"alias", ALIAS},
+    {"cd", CURDIR}
 };
 
 };
