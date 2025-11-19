@@ -1,7 +1,6 @@
-#ifndef runtime_h
-#define runtime_h
+#ifndef H_RUNTIME
+#define H_RUNTIME
 
-#include "utils.h"
 #include <any>
 #include <iostream>
 #include <optional>

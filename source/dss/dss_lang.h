@@ -7,8 +7,8 @@
  * features.
  */
 
-#ifndef lang_h
-#define lang_h
+#ifndef H_LANG
+#define H_LANG
 
 #include "utils.h"
 #include "DSS.h"
