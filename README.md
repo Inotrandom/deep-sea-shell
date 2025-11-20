@@ -22,9 +22,9 @@ Default DSS currently has only three (technically four) built-in functions:
 `alias_def <id> <value>`
 `out <msg...>`
 `src <relative path to script>`
-`cd <path`
+`cd <path>`
 
-These are defined in the `lang.h` file
+These are defined in the `dss_lang.h` file
 
 ### Example
 
@@ -95,7 +95,7 @@ env.connect_command_definer(example::command_definer);
 
 ## More Information
 
-It is highly recommended to read the source code of `lang.h` for documented examples on the usage of DSS's grafting feature.
+It is highly recommended to read the source code of `dss_lang.h` for documented examples on the usage of DSS's grafting feature.
 
 Building and running the program will result in the example (shown above in the "Example" section) being run.
 This will open an instance of the command line interface and allow the user to directly execute Deep Sea Shell.
