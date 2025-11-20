@@ -186,6 +186,7 @@ void DSS::Environment::init()
 {
     connect_preprocessor_definer(lang::preprocessor_definer);
     connect_command_definer(lang::command_definer);
+    apply_error_key(lang::ERR_KEY);
     
     spawn_executor();
 }
