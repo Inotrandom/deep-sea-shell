@@ -21,7 +21,7 @@ Default DSS currently has only three (technically four) built-in functions:
 
 `alias_def <id> <value>`
 `out <msg...>`
-`src <relative path to script>`
+`src <path to script>`
 `cd <path>`
 
 These are defined in the `dss_lang.h` file
