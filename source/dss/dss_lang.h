@@ -218,7 +218,8 @@ static std::any preprocessor_definer(DSS::Executor *exec)
     exec->define_command(
         func::alias_def,
         "alias_def",
-        "creates an alias"
+        "creates an alias",
+        2
     );
 
     exec->define_command(

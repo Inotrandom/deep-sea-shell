@@ -215,8 +215,8 @@ auto DSS::Command::attempt_parse_and_exec(DSS::StrVec tokens, uint64_t line) -> 
     if (m_maximum_args > -1 && arg_count > m_maximum_args)
     {
         std::stringstream msg;
-        msg << ERROR_TOO_MANY_ARGS << " \"" << m_name << "\"";
-        push_error(msg.str());
+        msg << ERROR_TOO_MANY_ARGS << " \"" << m_name << "\"" << "(max " << m_maximum_args << ")";
+        push_error(msg.str(), line);
 
         return {};
     }
@@ -224,8 +224,8 @@ auto DSS::Command::attempt_parse_and_exec(DSS::StrVec tokens, uint64_t line) -> 
     if (m_minimum_args > -1 && arg_count < m_minimum_args)
     {
         std::stringstream msg;
-        msg << ERROR_TOO_FEW_ARGS << " \"" << m_name << "\"";
-        push_error(msg.str());
+        msg << ERROR_TOO_FEW_ARGS << " \"" << m_name << "\"" << " (expected " << m_minimum_args << ")";
+        push_error(msg.str(), line);
 
         return {};
     }
