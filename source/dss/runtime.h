@@ -6,6 +6,8 @@
 #include <optional>
 #include <compare>
 #include <memory>
+#include <algorithm>
+
 #include "utils.h"
 
 namespace DSS {
@@ -209,9 +211,10 @@ public:
      * will throw an ICE!
      */
     template<typename A>
-    void append_data(A what) 
+    void append_data(A what)
     {
         bool found = false;
+        A *found_element;
         for (auto element : m_data)
         {
             try
@@ -221,12 +224,16 @@ public:
                 {
                     continue;
                 }
-            } catch (std::bad_any_cast &_e) {return;}
+                found_element = &comp;
+                found = true;
 
-            found = true;
+            } catch (std::bad_any_cast &_e) {return;}
         }
 
-        if (found == true) {return;}
+        if (found == true) 
+        {
+            return;
+        }
 
         m_data.push_back(what);
         

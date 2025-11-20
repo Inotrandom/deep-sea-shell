@@ -10,11 +10,11 @@
 #ifndef H_LANG
 #define H_LANG
 
-#include "utils.h"
-#include "DSS.h"
-
 #include <iostream>
 #include <filesystem>
+
+#include "utils.h"
+#include "DSS.h"
 
 namespace lang {
 
@@ -104,6 +104,24 @@ inline auto create_alias(DSS::Executor* p_ex, std::string id, std::string data) 
     Alias new_alias = Alias();
     new_alias.id = id;
     new_alias.value = data;
+
+    // Append it or replace it, but don't drop it
+    for (auto &element : alias_var->get_data())
+    {
+        try
+        {
+            lang::Alias comp = std::any_cast<lang::Alias>(element);
+            if (comp.id != id)
+            {
+                continue;
+            }
+
+            // Successful replace
+            element = new_alias;
+            return 0;
+
+        } catch (std::bad_any_cast &_e) {return 0;}
+    }
 
     alias_var->append_data(new_alias);
 
