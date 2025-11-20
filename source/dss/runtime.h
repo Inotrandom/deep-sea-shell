@@ -100,7 +100,7 @@ public:
      * 
      * @see DSSDelegate::call
      */
-    auto attempt_parse_and_exec(StrVec tokens) -> DSSDelegateReturnType;
+    auto attempt_parse_and_exec(StrVec tokens, uint64_t line) -> DSSDelegateReturnType;
 
 private:
     utils::Delegate<DSSFunc, DSSFuncArgs, DSSDelegateReturnType> m_delegate{32};

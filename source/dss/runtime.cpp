@@ -14,6 +14,8 @@
 #include <any>
 #include <optional>
 #include <iostream>
+#include <string>
+#include <sstream>
 
 void DSS::push_error(std::string what, int line)
 {
@@ -64,7 +66,7 @@ void DSS::Executor::direct_exec(DSS::StrVec statements)
 
         for (auto command : m_loaded_commands)
         {
-            DSS::DSSDelegateReturnType opt_res = command.attempt_parse_and_exec(parsed);
+            DSS::DSSDelegateReturnType opt_res = command.attempt_parse_and_exec(parsed, line);
 
             if (opt_res.size() == 0)
             {
@@ -188,6 +190,9 @@ void DSS::Environment::init()
     spawn_executor();
 }
 
+const std::string ERROR_TOO_MANY_ARGS = "Excessive amount of arguments provided to command";
+const std::string ERROR_TOO_FEW_ARGS = "Too few arguments provided to command";
+
 /**
  * Activates a pipeline which parses and executes
  * a statement.
@@ -196,15 +201,33 @@ void DSS::Environment::init()
  * 
  * @param delim The delimiter to separate tokens
  */
-auto DSS::Command::attempt_parse_and_exec(DSS::StrVec tokens) -> DSSDelegateReturnType
+auto DSS::Command::attempt_parse_and_exec(DSS::StrVec tokens, uint64_t line) -> DSSDelegateReturnType
 {
     DSSDelegateReturnType res = {};
     
-    if (tokens[0] != m_name) {return res;}
+    if (tokens[0] != m_name) return {};
 
     tokens.erase(tokens.begin());
 
     std::size_t arg_count = tokens.size();
+
+    if (m_maximum_args > -1 && arg_count > m_maximum_args)
+    {
+        std::stringstream msg;
+        msg << ERROR_TOO_MANY_ARGS << " \"" << m_name << "\"";
+        push_error(msg.str());
+
+        return {};
+    }
+
+    if (m_minimum_args > -1 && arg_count < m_minimum_args)
+    {
+        std::stringstream msg;
+        msg << ERROR_TOO_FEW_ARGS << " \"" << m_name << "\"";
+        push_error(msg.str());
+
+        return {};
+    }
 
     if (m_parent_ex == nullptr) {return res;}
 

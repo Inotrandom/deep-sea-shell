@@ -210,14 +210,15 @@ static std::any preprocessor_definer(DSS::Executor *exec)
     exec->define_command(
         func::source,
         "src",
-        "runs a dss script at path <path>"
+        "runs a dss script at path <path>",
+        1,
+        1
     );
 
     exec->define_command(
         func::alias_def,
         "alias_def",
-        "creates an alias",
-        2
+        "creates an alias"
     );
 
     exec->define_command(
@@ -237,13 +238,16 @@ static std::any command_definer(DSS::Executor *exec)
     exec->define_command(
         func::out,
         "out",
-        "outputs to console"
+        "outputs to console",
+        1
     );
 
     exec->define_command(
         func::curdir,
         "cd",
-        "changes the current directory"
+        "changes the current directory",
+        1,
+        1
     );
 
     return NULL;
