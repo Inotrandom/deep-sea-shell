@@ -13,6 +13,7 @@
 #include <iostream>
 #include <filesystem>
 
+#include "source/dss/runtime.h"
 #include "utils.h"
 #include "DSS.h"
 
@@ -148,6 +149,17 @@ namespace func
         return 0;
     }
 
+    inline auto ls(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+    {
+        for (const auto &dir_entry : std::filesystem::recursive_directory_iterator("."))
+        {
+            std::string name = dir_entry.path().generic_string();
+            std::cout << name << std::endl;
+        }
+
+        return 0;
+    }
+
     /**
      * @brief This will set the filesystem.current_directory using argument 1
      */
@@ -267,6 +279,14 @@ static std::any command_definer(DSS::Executor *exec)
         "changes the current directory",
         1,
         1
+    );
+
+    exec->define_command(
+        func::ls,
+        "ls",
+        "lists all files and directories in the current directory (.)",
+        0,
+        0
     );
 
     return NULL;
