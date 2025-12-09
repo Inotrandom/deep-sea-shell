@@ -13,7 +13,7 @@
 #include <iostream>
 #include <filesystem>
 
-#include "source/dss/runtime.h"
+#include "runtime.h"
 #include "utils.h"
 #include "DSS.h"
 
