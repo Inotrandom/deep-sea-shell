@@ -307,7 +307,7 @@ const DSS::ErrCodes ALIAS_DEF = {
 };
 
 const DSS::ErrCodes ALIAS = {
-    {1, "internal interpreter error, automatic command failure, critical data unexpectedly returned null. \n\nnote: this error requires the attention of a developer"}
+    {1, "internal interpreter error, automatic command failure, critical data unexpectedly returned null. \n\nhelp: did you mean \"alias_def\"?"}
 };
 
 const DSS::ErrCodes CURDIR = {
