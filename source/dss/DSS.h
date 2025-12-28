@@ -4,9 +4,9 @@
  * @brief Deep Sea Shell core library
  * @version 0.1
  * @date 2025-09-15
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 
 #ifndef H_DSS
