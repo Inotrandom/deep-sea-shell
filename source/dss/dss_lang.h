@@ -165,7 +165,7 @@ inline auto ls(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type
 	(void)p_ex;
 	(void)args;
 
-	for (const auto &dir_entry : std::filesystem::recursive_directory_iterator("."))
+	for (const auto &dir_entry : std::filesystem::directory_iterator("."))
 	{
 		std::string name = dir_entry.path().generic_string();
 		std::cout << name << std::endl;
