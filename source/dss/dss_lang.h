@@ -45,7 +45,7 @@ const std::string ALIAS_USE = "alias";
  * The particular class is a structure to store alias
  * values.
  */
-struct Alias
+struct alias_t
 {
 	/**
 	 * The identifier of the alias. This, in combination
@@ -60,9 +60,9 @@ struct Alias
 	 */
 	std::string value;
 
-	bool operator<=>(const Alias &) const = default;
+	bool operator<=>(const alias_t &) const = default;
 };
-typedef std::vector<Alias> AliasVarData;
+typedef std::vector<alias_t> AliasVarData;
 
 /**
  * Applies `alias` as an automatic preprocessor.
@@ -70,10 +70,10 @@ typedef std::vector<Alias> AliasVarData;
  * this function will never get called. Consequently,
  * the `alias` preprocessor will never become automatic.
  */
-inline void use_alias(DSS::Executor *p_ex)
+inline void use_alias(DSS::executor_t *p_ex)
 {
-	DSS::Vars &vars = p_ex->get_vars();
-	std::shared_ptr<DSS::Var<std::any>> auto_preproc_var = vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
+	DSS::vars_t &vars = p_ex->get_vars();
+	std::shared_ptr<DSS::var_t<std::any>> auto_preproc_var = vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
 
 	if (auto_preproc_var == nullptr)
 	{
@@ -98,17 +98,17 @@ inline void use_alias(DSS::Executor *p_ex)
  *
  * @param data The data of the alias
  */
-inline auto create_alias(DSS::Executor *p_ex, std::string id, std::string data) -> DSS::DSSReturnType
+inline auto create_alias(DSS::executor_t *p_ex, std::string id, std::string data) -> DSS::return_type_t
 {
-	DSS::Vars &vars = p_ex->get_vars();
-	std::shared_ptr<DSS::Var<std::any>> alias_var = vars.get_or_add_var(ALIAS_VAR);
+	DSS::vars_t &vars = p_ex->get_vars();
+	std::shared_ptr<DSS::var_t<std::any>> alias_var = vars.get_or_add_var(ALIAS_VAR);
 
 	if (alias_var == nullptr)
 	{
 		return 1;
 	}
 
-	Alias new_alias = Alias();
+	alias_t new_alias = alias_t();
 	new_alias.id = id;
 	new_alias.value = data;
 
@@ -117,7 +117,7 @@ inline auto create_alias(DSS::Executor *p_ex, std::string id, std::string data) 
 	{
 		try
 		{
-			lang::Alias comp = std::any_cast<lang::Alias>(element);
+			lang::alias_t comp = std::any_cast<lang::alias_t>(element);
 			if (comp.id != id)
 			{
 				continue;
@@ -145,7 +145,7 @@ namespace func
 /**
  * Out will push arguments into the stdout stream.
  */
-inline auto out(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+inline auto out(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type_t
 {
 	(void)p_ex;
 
@@ -160,7 +160,7 @@ inline auto out(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnTyp
 	return 0;
 }
 
-inline auto ls(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+inline auto ls(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type_t
 {
 	(void)p_ex;
 	(void)args;
@@ -177,7 +177,7 @@ inline auto ls(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
 /**
  * @brief This will set the filesystem.current_directory using argument 1
  */
-inline auto curdir(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+inline auto curdir(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type_t
 {
 	(void)p_ex;
 
@@ -191,7 +191,7 @@ inline auto curdir(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturn
 /**
  * Alias Define will define an alias and call `use_alias`
  */
-inline auto alias_def(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+inline auto alias_def(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type_t
 {
 	use_alias(p_ex); // Aliases are in use!
 
@@ -208,19 +208,37 @@ inline auto alias_def(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSRet
 }
 
 /**
+ * @brief Will not check for bad casts
+ *
+ * @param a The first alias
+ * @param b The second alias
+ * @return true a.id.length() > b.id.length()
+ * @return false a.id.length() < b.id.length()
+ */
+auto is_any_alias_id_greater(const std::any &a, const std::any &b) -> bool
+{
+	const alias_t &aa = std::any_cast<alias_t>(a);
+	const alias_t &ab = std::any_cast<alias_t>(b);
+
+	return (aa.id.length() > ab.id.length());
+}
+
+/**
  * Alias will apply defined aliases throughout
  * the script lazily.
  */
-inline auto alias(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+inline auto alias(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type_t
 {
-	DSS::Task *p_current_task = p_ex->get_current_task();
+	(void)args;
+
+	DSS::task_t *p_current_task = p_ex->get_current_task();
 	if (p_current_task == nullptr)
 	{
 		return 1;
 	}
 
-	DSS::Vars &vars = p_ex->get_vars();
-	std::shared_ptr<DSS::Var<std::any>> alias_var = vars.get_var(ALIAS_VAR);
+	DSS::vars_t &vars = p_ex->get_vars();
+	std::shared_ptr<DSS::var_t<std::any>> alias_var = vars.get_var(ALIAS_VAR);
 	if (alias_var == nullptr)
 	{
 		return 1;
@@ -228,9 +246,11 @@ inline auto alias(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnT
 
 	std::string &script = p_current_task->get_script();
 
+	std::sort(alias_var->get_data().begin(), alias_var->get_data().end(), is_any_alias_id_greater);
+
 	for (auto element : alias_var->get_data())
 	{
-		Alias alias = std::any_cast<Alias>(element);
+		alias_t alias = std::any_cast<alias_t>(element);
 
 		std::string deref = ALIAS_DEREF + alias.id;
 		utils::string_replace(script, deref, alias.value);
@@ -239,7 +259,7 @@ inline auto alias(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnT
 	return 0;
 }
 
-inline auto source(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturnType
+inline auto source(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type_t
 {
 	std::optional<std::string> res = utils::file_read(args[0]);
 
@@ -251,7 +271,7 @@ inline auto source(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturn
 		return 2;
 	}
 
-	DSS::Task task = DSS::Task(res.value());
+	DSS::task_t task = DSS::task_t(res.value());
 	p_ex->queue_task(task);
 
 	return 0;
@@ -261,7 +281,7 @@ inline auto source(DSS::Executor *p_ex, DSS::DSSFuncArgs args) -> DSS::DSSReturn
 /**
  * Definer for `lang` preprocessors
  */
-inline std::any preprocessor_definer(DSS::Executor *exec)
+inline std::any preprocessor_definer(DSS::executor_t *exec)
 {
 	exec->define_command(func::source, "src", "runs a dss script at path <path>", 1, 1);
 
@@ -275,7 +295,7 @@ inline std::any preprocessor_definer(DSS::Executor *exec)
 /**
  * Definer for `command` preprocessors
  */
-inline std::any command_definer(DSS::Executor *exec)
+inline std::any command_definer(DSS::executor_t *exec)
 {
 	exec->define_command(func::out, "out", "outputs to console", 1);
 
@@ -288,19 +308,19 @@ inline std::any command_definer(DSS::Executor *exec)
 
 const std::string NULL_ENVIRONMENT =
 	"internal interpreter error, critical data unexpectedly returned null.\n\nnote: this error requires the attention of a developer";
-const DSS::ErrCodes OUT = {{1, NULL_ENVIRONMENT}};
+const DSS::err_codes_t OUT = {{1, NULL_ENVIRONMENT}};
 
-const DSS::ErrCodes SRC = {{1, NULL_ENVIRONMENT}, {2, "failed to queue script, file does not exist"}};
+const DSS::err_codes_t SRC = {{1, NULL_ENVIRONMENT}, {2, "failed to queue script, file does not exist"}};
 
-const DSS::ErrCodes ALIAS_DEF = {{1, NULL_ENVIRONMENT}};
+const DSS::err_codes_t ALIAS_DEF = {{1, NULL_ENVIRONMENT}};
 
-const DSS::ErrCodes ALIAS = {
+const DSS::err_codes_t ALIAS = {
 	{1, "internal interpreter error, automatic command failure, critical data unexpectedly returned null. \n\nhelp: did you mean \"alias_def\"?"}};
 
-const DSS::ErrCodes CURDIR = {{1, "file does not exist"}};
+const DSS::err_codes_t CURDIR = {{1, "file does not exist"}};
 
-const DSS::ErrKey ERR_KEY = {{"out", OUT}, {"src", SRC}, {"alias_def", ALIAS_DEF}, {"alias", ALIAS}, {"cd", CURDIR}};
+const DSS::err_key_t ERR_KEY = {{"out", OUT}, {"src", SRC}, {"alias_def", ALIAS_DEF}, {"alias", ALIAS}, {"cd", CURDIR}};
 
 }; // namespace lang
 
-#endif
+#endif // H_LANG

@@ -13,13 +13,13 @@ static void console_clear()
 #endif
 }
 
-void DSS::CLI::init()
+void DSS::cli_t::init()
 {
 	console_clear();
 	input_loop();
 }
 
-void DSS::CLI::execute(std::string what)
+void DSS::cli_t::execute(std::string what)
 {
 	if (m_bound_executor == nullptr)
 	{
@@ -28,7 +28,7 @@ void DSS::CLI::execute(std::string what)
 	m_bound_executor->exec(what);
 }
 
-void DSS::CLI::input_loop()
+void DSS::cli_t::input_loop()
 {
 	while (m_alive == true)
 	{

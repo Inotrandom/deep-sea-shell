@@ -31,11 +31,11 @@ void DSS::push_error(std::string what, int line)
 	std::cout << what << std::endl;
 }
 
-void DSS::Executor::find_and_push_error(std::string command, int code, int line)
+void DSS::executor_t::find_and_push_error(std::string command, int code, int line)
 {
 	try
 	{
-		DSS::ErrCodes found = m_lookup_error.at(command);
+		DSS::err_codes_t found = m_lookup_error.at(command);
 
 		std::string error = found.at(code);
 
@@ -48,14 +48,14 @@ void DSS::Executor::find_and_push_error(std::string command, int code, int line)
 	}
 }
 
-void DSS::Executor::direct_exec(DSS::StrVec statements)
+void DSS::executor_t::direct_exec(DSS::strvec_t statements)
 {
 	int line = -1;
 
 	for (auto statement : statements)
 	{
 		line++;
-		DSS::StrVec parsed = utils::string_split(statement, DSS::key::TOKEN_DELIM);
+		DSS::strvec_t parsed = utils::string_split(statement, DSS::key::TOKEN_DELIM);
 
 		// No command
 		if (parsed.size() == 0)
@@ -63,11 +63,11 @@ void DSS::Executor::direct_exec(DSS::StrVec statements)
 			continue;
 		}
 
-		DSS::DSSDelegateReturnType res = {};
+		DSS::delegate_return_t res = {};
 
 		for (auto command : m_loaded_commands)
 		{
-			DSS::DSSDelegateReturnType opt_res = command.attempt_parse_and_exec(parsed, line);
+			DSS::delegate_return_t opt_res = command.attempt_parse_and_exec(parsed, line);
 
 			if (opt_res.size() == 0)
 			{
@@ -93,9 +93,9 @@ void DSS::Executor::direct_exec(DSS::StrVec statements)
 	}
 }
 
-void DSS::Executor::auto_preprocessors()
+void DSS::executor_t::auto_preprocessors()
 {
-	std::shared_ptr<DSS::Var<std::any>> auto_preprocessor_var = m_exec_vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
+	std::shared_ptr<DSS::var_t<std::any>> auto_preprocessor_var = m_exec_vars.get_or_add_var(DSS::AUTO_PREPROCESSOR_VAR);
 	if (auto_preprocessor_var == nullptr)
 	{
 		return;
@@ -110,7 +110,7 @@ void DSS::Executor::auto_preprocessors()
 	direct_exec(statements);
 }
 
-void DSS::Executor::command_pass(DSS::DefinerDelegate definer, DSS::StrVec statements)
+void DSS::executor_t::command_pass(DSS::definer_delegate_t definer, DSS::strvec_t statements)
 {
 	m_loaded_commands.clear(); // Remove all currently defined commands (to mitigate interference)
 	definer.call(this);
@@ -118,12 +118,12 @@ void DSS::Executor::command_pass(DSS::DefinerDelegate definer, DSS::StrVec state
 	direct_exec(statements);
 }
 
-auto DSS::Executor::exec_task(DSS::Task task) -> DSS::DSSReturnType
+auto DSS::executor_t::exec_task(DSS::task_t task) -> DSS::return_type_t
 {
 	m_current_task = &task;
 
 	std::string &script = task.get_script();
-	DSS::StrVec statements = utils::string_split(script, DSS::key::MULTILINE_DELIM);
+	DSS::strvec_t statements = utils::string_split(script, DSS::key::MULTILINE_DELIM);
 
 	command_pass(m_additional_preprocessors, statements);
 	auto_preprocessors();
@@ -135,9 +135,9 @@ auto DSS::Executor::exec_task(DSS::Task task) -> DSS::DSSReturnType
 	return 0;
 }
 
-auto DSS::Executor::exec_all_tasks(bool recursive) -> DSS::DSSDelegateReturnType
+auto DSS::executor_t::exec_all_tasks(bool recursive) -> DSS::delegate_return_t
 {
-	DSS::DSSDelegateReturnType res = {};
+	DSS::delegate_return_t res = {};
 
 	if (m_tasks.size() == 0)
 	{
@@ -167,16 +167,16 @@ auto DSS::Executor::exec_all_tasks(bool recursive) -> DSS::DSSDelegateReturnType
 	return res;
 }
 
-void DSS::Environment::apply_error_key(DSS::ErrKey key) { m_lookup_error.insert(key.begin(), key.end()); }
+void DSS::environment_t::apply_error_key(DSS::err_key_t key) { m_lookup_error.insert(key.begin(), key.end()); }
 
-void DSS::Executor::exec(std::string script)
+void DSS::executor_t::exec(std::string script)
 {
-	DSS::Task task = DSS::Task(script);
+	DSS::task_t task = DSS::task_t(script);
 	m_tasks.push_back(task);							// Append a task to the task list
 	exec_all_tasks(DSS::key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
 }
 
-auto DSS::Environment::executor_by_id(DSS::RunID id) -> std::optional<Executor>
+auto DSS::environment_t::executor_by_id(DSS::run_id_t id) -> std::optional<executor_t>
 {
 	for (auto executor : m_executors)
 	{
@@ -191,7 +191,7 @@ auto DSS::Environment::executor_by_id(DSS::RunID id) -> std::optional<Executor>
 	return std::nullopt;
 }
 
-void DSS::Environment::init()
+void DSS::environment_t::init()
 {
 	connect_preprocessor_definer(lang::preprocessor_definer);
 	connect_command_definer(lang::command_definer);
@@ -211,9 +211,9 @@ const std::string ERROR_TOO_FEW_ARGS = "Too few arguments provided to command";
  *
  * @param delim The delimiter to separate tokens
  */
-auto DSS::Command::attempt_parse_and_exec(DSS::StrVec tokens, uint64_t line) -> DSSDelegateReturnType
+auto DSS::command_t::attempt_parse_and_exec(DSS::strvec_t tokens, uint64_t line) -> delegate_return_t
 {
-	DSSDelegateReturnType res = {};
+	delegate_return_t res = {};
 
 	if (tokens[0] != m_name)
 		return {};
