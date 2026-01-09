@@ -1,7 +1,7 @@
 out Welcome to DSS!
 out This script will demonstrate built-in language features.
 
-alias_def VERSION 1.0.2
+alias_def HELLO Hello, world!
 
 out For example, aliases. Aliases literally replace parts of the script before "commands" are executed.
-out To dereference, use the $ operator: version $VERSION
+out To dereference, use the $ operator: $HELLO 

@@ -7,15 +7,15 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(
     ${PROJECT_NAME}
-    source/dss/example.cpp
-    source/dss/runtime.cpp
-    source/dss/cli.cpp
+    dss/example.cpp
+    dss/runtime.cpp
+    dss/cli.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC dss)
 add_library(
     DSS
-    source/dss/DSS.cpp 
-    source/dss/runtime.cpp 
-    source/dss/cli.cpp
+    dss/DSS.cpp 
+    dss/runtime.cpp 
+    dss/cli.cpp
 )
