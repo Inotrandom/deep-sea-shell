@@ -27,7 +27,7 @@ namespace utils
  *
  * @returns A vector of substrings after having been separated by delimiter.
  */
-static inline std::vector<std::string> string_split(std::string s, const std::string &delimiter)
+inline std::vector<std::string> string_split(std::string s, const std::string &delimiter)
 {
 	std::vector<std::string> tokens;
 	std::size_t pos = 0;
@@ -53,7 +53,7 @@ static inline std::vector<std::string> string_split(std::string s, const std::st
  *
  * @param with The string to replace `what` with
  */
-static inline void string_replace(std::string &s, std::string &what, const std::string &with)
+inline void string_replace(std::string &s, std::string &what, const std::string &with)
 {
 	std::size_t pos = 0;
 
@@ -71,7 +71,7 @@ static inline void string_replace(std::string &s, std::string &what, const std::
  * @return std::nullopt if the file failed to read, or std::string
  * if it was successful
  */
-static inline std::optional<std::string> file_read(std::string &path)
+inline std::optional<std::string> file_read(std::string &path)
 {
 	std::ifstream file(path);
 

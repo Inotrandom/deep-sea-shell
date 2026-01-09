@@ -9,7 +9,6 @@
  *
  */
 #include <any>
-#include <optional>
 #include <iostream>
 #include <string>
 #include <sstream>

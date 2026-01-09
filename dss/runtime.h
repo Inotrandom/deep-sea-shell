@@ -2,7 +2,6 @@
 #define H_RUNTIME
 
 #include <any>
-#include <optional>
 #include <memory>
 #include <map>
 
