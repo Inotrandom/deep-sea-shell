@@ -215,7 +215,7 @@ inline auto alias_def(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::retu
  * @return true a.id.length() > b.id.length()
  * @return false a.id.length() < b.id.length()
  */
-auto is_any_alias_id_greater(const std::any &a, const std::any &b) -> bool
+inline auto is_any_alias_id_greater(const std::any &a, const std::any &b) -> bool
 {
 	const alias_t &aa = std::any_cast<alias_t>(a);
 	const alias_t &ab = std::any_cast<alias_t>(b);
