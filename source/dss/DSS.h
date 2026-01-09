@@ -12,7 +12,6 @@
 #ifndef H_DSS
 #define H_DSS
 
-#include "runtime.h"
 #include "cli.h"
 
 #endif // H_DSS
