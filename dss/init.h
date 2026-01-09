@@ -9,7 +9,7 @@
 inline auto init_script() -> std::string
 {
 	std::stringstream script;
-	script << "alias_def __VERSION__" << str_VERSION;
+	script << "alias_def __VERSION__ " << str_VERSION;
 
 	return script.str();
 }

@@ -4,4 +4,6 @@ out This script will demonstrate built-in language features.
 alias_def HELLO Hello, world!
 
 out For example, aliases. Aliases literally replace parts of the script before "commands" are executed.
-out To dereference, use the $ operator: $HELLO 
+out To dereference, use the $ operator: $HELLO
+
+out There is a built-in macro: $__VERSION__

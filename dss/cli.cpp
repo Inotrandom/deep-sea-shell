@@ -30,6 +30,8 @@ void DSS::cli_t::execute(std::string what)
 
 void DSS::cli_t::input_loop()
 {
+	m_bound_executor->exec("out [cli] DSS Version $__VERSION__");
+
 	while (m_alive == true)
 	{
 		std::cout << "\033[34m" << std::filesystem::current_path().string() << "\033[0m \033[35m" << m_name << "\033[0m \033[1m \033[32m>>>\033[0m ";
