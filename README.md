@@ -31,27 +31,24 @@ These are defined in the `dss_lang.h` file
 Demonstrated below is a program that successfully invokes DSS:
 
 ```cpp
-#include <iostream>
 #include "DSS.h"
 
-int main(int argv, char** argc)
+int main()
 {
-    DSS::Environment env = DSS::Environment();
+	DSS::environment_t env = DSS::environment_t();
 
-    env.init();
-    std::optional<DSS::Executor> opt_main_executor = env.main_executor();
+	env.init();
+	std::shared_ptr<DSS::executor_t> main_ex = env.main_executor();
 
-    if (opt_main_executor.has_value() == false)
-    {
-        return 1;
-    }
+	if (main_ex == nullptr)
+	{
+		return 1;
+	}
 
-    DSS::Executor main_executor = opt_main_executor.value();
+	DSS::cli_t cli = DSS::cli_t(main_ex);
+	cli.init(); // TODO: Execute "src example.dss" in the console to see DSS in action
 
-    DSS::CLI cli = DSS::CLI(&main_executor);
-    cli.init(); // TODO: Execute "src example.dss" in the console to see DSS in action
-
-    return 0;
+	return 0;
 }
 ```
 
