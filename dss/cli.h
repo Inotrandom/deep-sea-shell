@@ -13,12 +13,12 @@ const std::string DEFAULT_CLI_NAME = "dss";
 class cli_t
 {
 private:
-	DSS::executor_t *m_bound_executor;
+	std::shared_ptr<DSS::executor_t> m_bound_executor;
 	bool m_alive;
 	std::string m_name;
 
 public:
-	cli_t(DSS::executor_t *bound_executor, std::string name)
+	cli_t(std::shared_ptr<DSS::executor_t> bound_executor, std::string name)
 	{
 		if (bound_executor == nullptr)
 		{
@@ -30,7 +30,7 @@ public:
 		m_name = name;
 	}
 
-	cli_t(DSS::executor_t *bound_executor)
+	cli_t(std::shared_ptr<DSS::executor_t> bound_executor)
 	{
 		if (bound_executor == nullptr)
 		{

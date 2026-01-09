@@ -9,16 +9,14 @@ int main()
 	DSS::environment_t env = DSS::environment_t();
 
 	env.init();
-	std::optional<DSS::executor_t> opt_main_executor = env.main_executor();
+	std::shared_ptr<DSS::executor_t> main_ex = env.main_executor();
 
-	if (opt_main_executor.has_value() == false)
+	if (main_ex == nullptr)
 	{
 		return 1;
 	}
 
-	DSS::executor_t main_executor = opt_main_executor.value();
-
-	DSS::cli_t cli = DSS::cli_t(&main_executor);
+	DSS::cli_t cli = DSS::cli_t(main_ex);
 	cli.init(); // TODO: Execute "src example.dss" in the console to see DSS in action
 
 	return 0;

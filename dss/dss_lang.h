@@ -202,6 +202,7 @@ inline auto alias_def(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::retu
 	for (auto argument : args)
 	{
 		value += argument;
+		value += DSS::key::TOKEN_DELIM;
 	}
 
 	return create_alias(p_ex, id, value);

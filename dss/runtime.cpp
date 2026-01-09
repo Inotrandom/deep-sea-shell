@@ -17,6 +17,7 @@
 #include "utils.h"
 #include "runtime.h"
 #include "dss_lang.h"
+#include "init.h"
 
 void DSS::push_error(std::string what, int line)
 {
@@ -176,11 +177,11 @@ void DSS::executor_t::exec(std::string script)
 	exec_all_tasks(DSS::key::FLAG_RECURSIVE_EXECUTION); // Invoke the executor
 }
 
-auto DSS::environment_t::executor_by_id(DSS::run_id_t id) -> std::optional<executor_t>
+auto DSS::environment_t::executor_by_id(DSS::run_id_t id) -> std::shared_ptr<DSS::executor_t>
 {
 	for (auto executor : m_executors)
 	{
-		if (executor.get_id() != id)
+		if (executor->get_id() != id)
 		{
 			continue;
 		}
@@ -188,7 +189,7 @@ auto DSS::environment_t::executor_by_id(DSS::run_id_t id) -> std::optional<execu
 		return executor;
 	}
 
-	return std::nullopt;
+	return nullptr;
 }
 
 void DSS::environment_t::init()
@@ -198,6 +199,16 @@ void DSS::environment_t::init()
 	apply_error_key(lang::ERR_KEY);
 
 	spawn_executor();
+
+	std::shared_ptr<executor_t> main_ex = main_executor();
+
+	if (main_ex == nullptr)
+	{
+		std::cout << "[warning] failure to produce a main executor, initialization sequence incomplete." << std::endl;
+		return;
+	}
+
+	main_ex->exec(init_script());
 }
 
 const std::string ERROR_TOO_MANY_ARGS = "Excessive amount of arguments provided to command";

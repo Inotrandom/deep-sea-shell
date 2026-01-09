@@ -565,8 +565,9 @@ public:
 	 */
 	void spawn_executor()
 	{
-		executor_t new_executor = executor_t(unique_runid(), m_additional_preprocessors, m_additional_commands, m_lookup_error);
-		m_executors.push_back(new_executor);
+		std::shared_ptr<executor_t> new_executor =
+			std::make_shared<executor_t>(unique_runid(), m_additional_preprocessors, m_additional_commands, m_lookup_error);
+		m_executors.emplace_back(new_executor);
 	}
 
 	/**
@@ -582,11 +583,11 @@ public:
 	 * @return an optional containing the main executor.
 	 * This should have a value if the environment has been initialized properly.
 	 */
-	auto main_executor() -> std::optional<executor_t>
+	auto main_executor() -> std::shared_ptr<executor_t>
 	{
 		if (m_executors.size() == 0)
 		{
-			return std::nullopt;
+			return nullptr;
 		}
 
 		return m_executors[0];
@@ -605,7 +606,7 @@ private:
 	 * A vector of every executor that is
 	 * currently alive in this environment.
 	 */
-	std::vector<executor_t> m_executors;
+	std::vector<std::shared_ptr<executor_t>> m_executors;
 
 	/**
 	 * Definer delegate containing additional preprocessor definers.
@@ -637,7 +638,7 @@ private:
 	 * @return An optional containing the executor, if it
 	 * exists.
 	 */
-	auto executor_by_id(run_id_t id) -> std::optional<executor_t>;
+	auto executor_by_id(run_id_t id) -> std::shared_ptr<executor_t>;
 };
 
 }; // namespace DSS
