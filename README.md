@@ -67,7 +67,7 @@ When defining custom functionality for DSS, you must create a definer function:
 ```cpp
 namespace example
 {
-static std::any command_definer(runtime::Executor *exec)
+static std::any command_definer(DSS::executor_t *p_exec)
 {
     if (exec == nullptr) {return NULL;}
 
