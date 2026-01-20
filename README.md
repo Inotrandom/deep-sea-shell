@@ -17,12 +17,13 @@ specific needs.
 
 ## Usage
 
-Default DSS currently has only three (technically four) built-in functions:
+Default DSS currently has only five (technically six) built-in functions:
 
 `alias_def <id> <value>`
 `out <msg...>`
 `src <path to script>`
 `cd <path>`
+`ls`
 
 These are defined in the `dss_lang.h` file
 
