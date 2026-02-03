@@ -5,7 +5,7 @@
 #include <memory>
 #include <map>
 
-#include "utils.h"
+#include "dss_utils.h"
 
 namespace DSS
 {
@@ -95,7 +95,7 @@ public:
 	auto attempt_parse_and_exec(strvec_t tokens, std::uint64_t line) -> delegate_return_t;
 
 private:
-	utils::Delegate<func_t, func_args_t, delegate_return_t> m_delegate = {32};
+	dss_utils::Delegate<func_t, func_args_t, delegate_return_t> m_delegate = {32};
 	std::string m_name = {""};
 	std::string m_description = {""};
 	int64_t m_minimum_args = {-1};
@@ -149,7 +149,7 @@ private:
 };
 
 typedef std::any (*definer_t)(executor_t *);
-typedef utils::Delegate<definer_t, executor_t *, std::vector<std::any>> definer_delegate_t;
+typedef dss_utils::Delegate<definer_t, executor_t *, std::vector<std::any>> definer_delegate_t;
 
 template <typename T> class var_t
 {

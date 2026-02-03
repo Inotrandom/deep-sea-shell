@@ -16,7 +16,7 @@
 #include <sstream>
 #include <cstdint>
 
-namespace utils
+namespace dss_utils
 {
 
 /**
@@ -173,6 +173,6 @@ public:
 	}
 };
 
-}; // namespace utils
+}; // namespace dss_utils
 
 #endif

@@ -13,7 +13,7 @@
 #include <string>
 #include <sstream>
 
-#include "utils.h"
+#include "dss_utils.h"
 #include "runtime.h"
 #include "dss_lang.h"
 #include "init.h"
@@ -55,7 +55,7 @@ void DSS::executor_t::direct_exec(DSS::strvec_t statements)
 	for (auto statement : statements)
 	{
 		line++;
-		DSS::strvec_t parsed = utils::string_split(statement, DSS::key::TOKEN_DELIM);
+		DSS::strvec_t parsed = dss_utils::string_split(statement, DSS::key::TOKEN_DELIM);
 
 		// No command
 		if (parsed.size() == 0)
@@ -123,12 +123,12 @@ auto DSS::executor_t::exec_task(DSS::task_t task) -> DSS::return_type_t
 	m_current_task = &task;
 
 	std::string &script = task.get_script();
-	DSS::strvec_t statements = utils::string_split(script, DSS::key::MULTILINE_DELIM);
+	DSS::strvec_t statements = dss_utils::string_split(script, DSS::key::MULTILINE_DELIM);
 
 	command_pass(m_additional_preprocessors, statements);
 	auto_preprocessors();
 
-	statements = utils::string_split(script, DSS::key::MULTILINE_DELIM); // Update after the preprocessors are finished
+	statements = dss_utils::string_split(script, DSS::key::MULTILINE_DELIM); // Update after the preprocessors are finished
 
 	command_pass(m_additional_commands, statements);
 

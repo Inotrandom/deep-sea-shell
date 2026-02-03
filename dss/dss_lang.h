@@ -14,7 +14,7 @@
 #include <filesystem>
 
 #include "runtime.h"
-#include "utils.h"
+#include "dss_utils.h"
 
 namespace lang
 {
@@ -254,7 +254,7 @@ inline auto alias(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_t
 		alias_t alias = std::any_cast<alias_t>(element);
 
 		std::string deref = ALIAS_DEREF + alias.id;
-		utils::string_replace(script, deref, alias.value);
+		dss_utils::string_replace(script, deref, alias.value);
 	}
 
 	return 0;
@@ -262,7 +262,7 @@ inline auto alias(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_t
 
 inline auto source(DSS::executor_t *p_ex, DSS::func_args_t args) -> DSS::return_type_t
 {
-	std::optional<std::string> res = utils::file_read(args[0]);
+	std::optional<std::string> res = dss_utils::file_read(args[0]);
 
 	// std::cout << std::filesystem::current_path();
 	// std::cout << res.has_value();
