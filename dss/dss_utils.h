@@ -5,8 +5,8 @@
  * function of DSS, then it likely belongs here.
  */
 
-#ifndef H_UTILS
-#define H_UTILS
+#ifndef H_DSS_UTILS
+#define H_DSS_UTILS
 
 #include <vector>
 #include <string>
@@ -175,4 +175,4 @@ public:
 
 }; // namespace dss_utils
 
-#endif
+#endif // H_DSS_UTILS
