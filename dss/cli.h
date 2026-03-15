@@ -25,7 +25,7 @@ class cli_t
 {
 private:
 	std::shared_ptr<DSS::executor_t> m_bound_executor;
-	bool m_alive;
+	bool m_alive = true;
 	std::string m_name;
 
 public:
@@ -52,6 +52,8 @@ public:
 
 		m_name = DEFAULT_CLI_NAME;
 	}
+
+	void kill() { m_alive = false; }
 
 	void init();
 
