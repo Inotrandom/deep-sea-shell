@@ -1,21 +1,11 @@
 cmake_minimum_required(VERSION 3.25.1)
 
-add_compile_options(-Wall -Wpedantic -Wextra)
+project(DeepSeaShell_lib)
+option(BUILD_DSS_TESTS OFF)
 
-project(DeepSeaShell)
+add_compile_options(-Wextra -Wall -Wpedantic)
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(
-    ${PROJECT_NAME}
-    dss/example.cpp
-    dss/runtime.cpp
-    dss/cli.cpp
-)
-
-target_include_directories(${PROJECT_NAME} PUBLIC dss)
-add_library(
-    DSS
-    dss/DSS.cpp 
-    dss/runtime.cpp 
-    dss/cli.cpp
-)
+if(BUILD_DSS_TESTS)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/test)
+endif()
