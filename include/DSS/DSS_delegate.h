@@ -5,6 +5,9 @@
 #include <vector>
 #include <algorithm>
 
+namespace DSS
+{
+
 /**
  * Function pointers are connected to the delegate,
  * which can be called with the same arguments.
@@ -14,7 +17,7 @@
  * it is used for the case that a command might require
  * more than one function to be called.
  */
-template <typename F, typename A, typename R> class delegate_t
+template <typename F, typename R> class delegate_t
 {
 private:
 	std::vector<F> m_connected;
@@ -93,5 +96,7 @@ public:
 		return res;
 	}
 };
+
+} // namespace DSS
 
 #endif // DSS_DELEGATE_H

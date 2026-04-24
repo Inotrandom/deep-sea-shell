@@ -14,7 +14,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace dss_utils
+namespace DSS
 {
 
 /**
@@ -84,6 +84,6 @@ inline std::optional<std::string> file_read(std::string &path)
 	return buf.str();
 }
 
-}; // namespace dss_utils
+}; // namespace DSS
 
 #endif // H_DSS_UTILS
