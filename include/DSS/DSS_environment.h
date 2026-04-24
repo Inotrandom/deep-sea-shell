@@ -1,0 +1,4 @@
+#ifndef DSS_ENVIRONMENT_H
+#define DSS_ENVIRONMENT_H
+
+#endif // DSS_ENVIRONMENT_H

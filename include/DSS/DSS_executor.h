@@ -1,1 +1,4 @@
+#ifndef DSS_EXECUTOR_H
 #define DSS_EXECUTOR_H
+
+#endif // DSS_EXECUTOR_H
