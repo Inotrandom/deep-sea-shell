@@ -202,7 +202,8 @@ And finally, we destroy the environment.
 >
 > void my_definer_on_env_destroying(void *arg)
 > {
->   DSS_env_t *env = (DSS_env_t *)env;
+> 	/* This particular event will always pass the environment */
+>   DSS_env_t *env = (DSS_env_t *)arg;
 >
 >   /* Free your records in the environment's DSS_mem_t */
 > }
