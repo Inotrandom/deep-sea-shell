@@ -4,6 +4,8 @@ project(DeepSeaShell VERSION 0.0.0)
 
 option(DSS_BUILD_TESTS "Whether or not to build Deep Sea Shell unit tests." OFF)
 
+add_compile_options(-Wall -Wpedantic -Wextra)
+
 if (DSS_BUILD_TESTS)
 	add_executable(
 		${PROJECT_NAME} 
