@@ -1,5 +1,9 @@
 # Deep Sea Shell
 
+> [!WARNING]
+> Version 1.x is no longer supported,
+> nor is it a good way to use Deep Sea Shell
+
 ## Brief
 
 DSS is a high-level data-oriented operative scripting language. Among others,
