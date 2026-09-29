@@ -29,15 +29,16 @@ DSS_command_t *DSS_command_create(const char *id, DSS_command_funcptr_t command)
 {
 	DSS_command_t *this = (DSS_command_t *)malloc(sizeof(DSS_command_t));
 	this->command = command;
-	this->id = (char *)malloc(strlen(id));
-	memcpy(this->id, id, strlen(id));
+	this->id = strdup(id);
 	return this;
 }
 
 void DSS_command_destroy(DSS_command_t *this)
 {
 	free(this->id);
+	this->id = NULL;
 	free(this);
+	this = NULL;
 }
 
 #endif // DSS_COMMAND_H

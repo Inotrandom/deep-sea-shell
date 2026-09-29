@@ -74,6 +74,10 @@ DSS_event_t *DSS_event_create(void)
 	return this;
 }
 
-void DSS_event_destroy(DSS_event_t *this) { free(this); }
+void DSS_event_destroy(DSS_event_t *this)
+{
+	free(this);
+	this = NULL;
+}
 
 #endif // DSS_EVENT_H

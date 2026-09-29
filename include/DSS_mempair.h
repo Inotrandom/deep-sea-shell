@@ -28,7 +28,9 @@ DSS_mempair_t *DSS_mempair_create(char *key, void *pair, int pair_len)
 void DSS_mempair_destroy(DSS_mempair_t *this)
 {
 	free(this->key);
+	this->key = NULL;
 	free(this);
+	this = NULL;
 }
 
 #endif // DSS_MEMPAIR_H
