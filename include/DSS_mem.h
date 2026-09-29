@@ -36,6 +36,7 @@ void *DSS_mem_get(DSS_mem_t *this, char *key)
 		}
 
 		found = (**iter).pair;
+		break;
 	}
 
 	return found;
