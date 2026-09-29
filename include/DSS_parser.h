@@ -59,12 +59,8 @@ void DSS_string_array_dump(char **string_array)
 
 void DSS_string_array_destroy(char **string_array)
 {
-	for (char **iter = string_array; iter < (string_array + DSS_string_array_len(string_array)); ++iter)
+	for (char **iter = string_array; *iter != NULL; ++iter)
 	{
-		if (iter == NULL)
-		{
-			continue;
-		}
 		free(*iter);
 		*iter = NULL;
 	}
@@ -161,8 +157,9 @@ char **DSS_string_handle_brackets(char **tokens)
 			memcpy(temp, *iter + strlen(DSS_LEX_BRACK_OPEN), token_len);
 			temp[token_len] = '\0';
 
-			res[idx] = temp;
+			res[idx] = strdup(temp);
 			++idx;
+			free(temp);
 			temp = NULL;
 			continue;
 		}
@@ -231,6 +228,9 @@ char **DSS_string_handle_brackets(char **tokens)
 
 			// Exclude the opening bracket
 			word = (char *)malloc(sizeof(char) * brack_size + 1);
+			for (char *iter = word; iter < (word + brack_size + 1); ++iter)
+				*iter = '\0';
+
 			if (strcmp(*iter, DSS_LEX_BRACK_OPEN) == 0)
 			{
 				continue;
@@ -262,11 +262,12 @@ char **DSS_string_handle_brackets(char **tokens)
 
 char **DSS_string_parse(char *string, const char *delim, bool handle_brackets)
 {
-	char *copied_string = (char *)malloc(strlen(string) + strlen(delim));
+	char *copied_string = (char *)malloc(strlen(string) + strlen(delim) + 2);
 
 	// Appends a delimeter to the end of the string
-	(void)memcpy(copied_string, string, strlen(string));
-	(void)memcpy(copied_string + strlen(string), delim, strlen(delim));
+	memcpy(copied_string, string, strlen(string));
+	memcpy(copied_string + strlen(string), delim, strlen(delim));
+	*(copied_string + strlen(string) + strlen(delim)) = '\0';
 
 	char **split = NULL;
 	int split_end_n = 0;
