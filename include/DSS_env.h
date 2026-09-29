@@ -2,7 +2,6 @@
 #define DSS_ENV_H
 
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "DSS_mem.h"
 #include "DSS_command.h"
@@ -33,37 +32,34 @@ bool DSS_env_commands_in_bounds(DSS_env_t *this)
 
 void DSS_env_exec(DSS_env_t *this, char *what)
 {
-	char **lines = DSS_string_split(what, "\n");
+	char **lines = DSS_string_parse(what, "\n", false);
 
 	for (char **line = lines; *line != NULL; ++line)
 	{
-		char **tokens = DSS_string_split(*line, " ");
-		unsigned int n_tokens = DSS_count_string_array(tokens);
+		char **tokens = DSS_string_parse(*line, " ", true);
+		unsigned int n_tokens = DSS_string_array_len(tokens);
 
 		if (n_tokens == 0)
 		{
 			continue;
 		}
 
+		char *id = strdup(tokens[0]);
+
 		for (DSS_command_t **iter = this->defined_commands; iter < (this->defined_commands + this->defined_commands_n); ++iter)
 		{
-			DSS_command_match_call(*iter, tokens[0], this->mem, n_tokens - 1, tokens + 1);
+			DSS_command_match_call(*iter, id, this->mem, n_tokens - 1, tokens + 1);
 
 			// TODO: error handling function
 		}
 
+		free(id);
+		id = NULL;
+
 		if (tokens != NULL)
 		{
-			for (char **iter = tokens; iter < tokens + n_tokens; ++iter)
-			{
-				if (iter == NULL)
-				{
-					continue;
-				}
-				free(*iter);
-			}
-
-			free(tokens);
+			DSS_string_array_destroy(tokens);
+			tokens = NULL;
 		}
 	}
 }
@@ -103,9 +99,11 @@ void DSS_env_destroy(DSS_env_t *this)
 	}
 
 	free(this->defined_commands);
+	this->defined_commands = NULL;
 
 	DSS_event_destroy(this->event_destroying);
 	free(this);
+	this = NULL;
 }
 
 #endif // DSS_ENV_H

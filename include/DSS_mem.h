@@ -86,7 +86,9 @@ void DSS_mem_destroy(DSS_mem_t *this)
 		DSS_mempair_destroy(*iter);
 	}
 	free(this->data);
+	this->data = NULL;
 	free(this);
+	this = NULL;
 }
 
 #endif // DSS_MEM_H
