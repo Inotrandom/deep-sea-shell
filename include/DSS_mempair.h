@@ -17,7 +17,7 @@ void DSS_mempair_fill_key(DSS_mempair_t *this, const char *key) { this->key = st
 DSS_mempair_t *DSS_mempair_create(char *key, void *pair, int pair_len)
 {
 	DSS_mempair_t *this = (DSS_mempair_t *)malloc(sizeof(DSS_mempair_t));
-	this->key = key;
+	this->key = strdup(key);
 	this->pair = pair;
 	this->pair_len = pair_len;
 
