@@ -80,6 +80,7 @@ DSS_event_t *DSS_event_create(void)
 
 void DSS_event_destroy(DSS_event_t *this)
 {
+	free(this->connected);
 	free(this);
 	this = NULL;
 }

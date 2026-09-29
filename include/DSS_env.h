@@ -62,6 +62,8 @@ void DSS_env_exec(DSS_env_t *this, char *what)
 			tokens = NULL;
 		}
 	}
+
+	DSS_string_array_destroy(lines);
 }
 
 void DSS_env_define_command(DSS_env_t *this, char *id, DSS_command_funcptr_t func)
@@ -106,6 +108,7 @@ void DSS_env_destroy(DSS_env_t *this)
 	this->defined_commands = NULL;
 
 	DSS_event_destroy(this->event_destroying);
+	this->event_destroying = NULL;
 	free(this);
 	this = NULL;
 }
