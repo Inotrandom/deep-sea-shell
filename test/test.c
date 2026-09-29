@@ -59,13 +59,18 @@ int main(int argc, char **argv)
 		abort();
 	}
 
+	free(mempair->pair);
+	free(mempair_a->pair);
+	free(mempair_b->pair);
+	DSS_mempair_destroy(mempair);
+
+	DSS_mem_destroy(mem);
+
 	char *test_trim = strdup("    fresh trim!   ");
 	printf("\"%s\"\n", test_trim);
 	DSS_string_trim(test_trim);
 	printf("\"%s\"\n", test_trim);
 	free(test_trim);
-
-	printf("%i\n", *(int *)mempair_gotten);
 
 	char *haystack = "Another Thing {{ Um And So }} Hey No {{Yes}} {{ Again Right Sure }} Oh {{Well Command}}";
 	printf("Occurences: %i\n", DSS_string_count_occurences(haystack, " "));
@@ -83,6 +88,8 @@ int main(int argc, char **argv)
 	DSS_env_t *env = DSS_env_create();
 	DSS_stdlang_definer(env);
 	DSS_env_exec(env, "out {{Hello, world!}}\nout Goodbye, world.");
+
+	DSS_env_destroy(env);
 
 	return 0;
 }
