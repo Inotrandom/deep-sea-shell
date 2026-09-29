@@ -83,6 +83,8 @@ DSS_env_t *DSS_env_create(void)
 	this->defined_commands = (DSS_command_t **)malloc(sizeof(DSS_command_t) * DSS_MAX_DEFINED_COMMANDS);
 	this->defined_commands_n = 0;
 
+	this->mem = DSS_mem_create();
+
 	this->event_destroying = DSS_event_create();
 
 	return this;
@@ -97,6 +99,8 @@ void DSS_env_destroy(DSS_env_t *this)
 	{
 		DSS_command_destroy(*iter);
 	}
+
+	DSS_mem_destroy(this->mem);
 
 	free(this->defined_commands);
 	this->defined_commands = NULL;
