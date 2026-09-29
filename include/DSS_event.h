@@ -70,6 +70,10 @@ DSS_event_t *DSS_event_create(void)
 {
 	DSS_event_t *this = (DSS_event_t *)malloc(sizeof(DSS_event_t));
 	this->connected = (DSS_event_funcptr_t *)malloc(sizeof(DSS_event_funcptr_t *) * DSS_EVENT_MAX_CONNECTED);
+	for (DSS_event_funcptr_t *iter = this->connected; iter < (this->connected + DSS_EVENT_MAX_CONNECTED); ++iter)
+	{
+		*iter = NULL;
+	}
 
 	return this;
 }
