@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 #include <stdbool.h>
 
 #include "DSS_defs.h"
@@ -120,9 +119,6 @@ char **DSS_string_handle_brackets(char **tokens)
 {
 	// This awful thing needs fixing
 
-	int bracks_open = 0;
-	int bracks_close = 0;
-	int bracks = 0;
 	char **res = NULL;
 	int idx = 0;
 	char *word = NULL;
@@ -132,20 +128,13 @@ char **DSS_string_handle_brackets(char **tokens)
 	bool in_brack = false;
 	int brack_size = 0;
 
-	for (char **iter = tokens; *iter != NULL; ++iter)
-	{
-		bracks_open += DSS_string_count_occurences(*iter, DSS_LEX_BRACK_OPEN);
-		bracks_close += DSS_string_count_occurences(*iter, DSS_LEX_BRACK_CLOSE);
-	}
-	bracks = fmin(bracks_open, bracks_close);
+	unsigned int res_len = DSS_string_array_len(tokens);
+	res = (char **)malloc(sizeof(char *) * (res_len + 1));
 
-	if (bracks == 0)
+	for (char **iter = res; iter < (res + res_len); ++iter)
 	{
-		return NULL;
+		*iter = NULL;
 	}
-
-	unsigned int res_size = sizeof(char *) * ((DSS_string_array_len(tokens) - bracks) + 1);
-	res = (char **)malloc(res_size);
 
 	for (char **iter = tokens; *iter != NULL; ++iter)
 	{
@@ -255,7 +244,7 @@ char **DSS_string_handle_brackets(char **tokens)
 	}
 
 	// Ensure it ends on NULL
-	res[idx] = NULL;
+	res[res_len] = NULL;
 
 	return res;
 }
@@ -277,6 +266,10 @@ char **DSS_string_parse(char *string, const char *delim, bool handle_brackets)
 
 	// Plus one for the NULL last string
 	split = (char **)malloc(sizeof(char *) * (split_size + 1));
+	for (char **iter = split; iter < split + (split_size + 1); ++iter)
+	{
+		*iter = NULL;
+	}
 
 	char *token = strtok(copied_string, delim);
 
@@ -289,7 +282,7 @@ char **DSS_string_parse(char *string, const char *delim, bool handle_brackets)
 			continue;
 		}
 
-		split[split_end_n] = strdup(token);
+		split[split_end_n] = strcat(strdup(token), "\0");
 		++split_end_n;
 		token = strtok(NULL, delim);
 	}
