@@ -17,13 +17,13 @@ typedef struct
 	unsigned int data_n;
 } DSS_mem_t;
 
-DSS_mempair_t **DSS_mem_end(DSS_mem_t *this) { return (this->data + this->data_n); }
+DSS_mempair_t **DSS_mem_end(DSS_mem_t *self) { return (self->data + self->data_n); }
 
 /// Returns a pointer to a pair for the corresponding `key`.
-void *DSS_mem_get(DSS_mem_t *this, char *key)
+void *DSS_mem_get(DSS_mem_t *self, char *key)
 {
 	void *found = NULL;
-	for (DSS_mempair_t **iter = this->data; iter < DSS_mem_end(this); ++iter)
+	for (DSS_mempair_t **iter = self->data; iter < DSS_mem_end(self); ++iter)
 	{
 		if ((**iter).key == NULL)
 		{
@@ -42,9 +42,9 @@ void *DSS_mem_get(DSS_mem_t *this, char *key)
 	return found;
 }
 
-bool DSS_mem_in_bounds(DSS_mem_t *this)
+bool DSS_mem_in_bounds(DSS_mem_t *self)
 {
-	if (this->data_n >= this->data_maxn)
+	if (self->data_n >= self->data_maxn)
 	{
 		return false;
 	}
@@ -52,44 +52,44 @@ bool DSS_mem_in_bounds(DSS_mem_t *this)
 	return true;
 }
 
-void DSS_mem_expand(DSS_mem_t *this)
+void DSS_mem_expand(DSS_mem_t *self)
 {
-	this->data_maxn *= DSS_MEM_EXPANSION_COEFFICIENT;
-	this->data = (DSS_mempair_t **)realloc(this->data, sizeof(DSS_mempair_t *) * this->data_maxn);
+	self->data_maxn *= DSS_MEM_EXPANSION_COEFFICIENT;
+	self->data = (DSS_mempair_t **)realloc(self->data, sizeof(DSS_mempair_t *) * self->data_maxn);
 }
 
-void DSS_mem_push_back(DSS_mem_t *this, DSS_mempair_t *pair)
+void DSS_mem_push_back(DSS_mem_t *self, DSS_mempair_t *pair)
 {
-	if (DSS_mem_in_bounds(this) == false)
+	if (DSS_mem_in_bounds(self) == false)
 	{
-		DSS_mem_expand(this);
+		DSS_mem_expand(self);
 	}
 
-	*DSS_mem_end(this) = pair;
-	++(this->data_n);
+	*DSS_mem_end(self) = pair;
+	++(self->data_n);
 }
 
 DSS_mem_t *DSS_mem_create(void)
 {
-	DSS_mem_t *this = (DSS_mem_t *)malloc(sizeof(DSS_mempair_t));
-	this->data_maxn = DSS_MEM_STARTING_SIZE;
-	this->data_n = 0;
-	this->data = (DSS_mempair_t **)malloc(sizeof(DSS_mempair_t *) * DSS_MEM_STARTING_SIZE);
+	DSS_mem_t *self = (DSS_mem_t *)malloc(sizeof(DSS_mempair_t));
+	self->data_maxn = DSS_MEM_STARTING_SIZE;
+	self->data_n = 0;
+	self->data = (DSS_mempair_t **)malloc(sizeof(DSS_mempair_t *) * DSS_MEM_STARTING_SIZE);
 
-	return this;
+	return self;
 }
 
 /// This should not be called directly, as it will leave memory dangling.
-void DSS_mem_destroy(DSS_mem_t *this)
+void DSS_mem_destroy(DSS_mem_t *self)
 {
-	for (DSS_mempair_t **iter = this->data; iter < DSS_mem_end(this); ++iter)
+	for (DSS_mempair_t **iter = self->data; iter < DSS_mem_end(self); ++iter)
 	{
 		DSS_mempair_destroy(*iter);
 	}
-	free(this->data);
-	this->data = NULL;
-	free(this);
-	this = NULL;
+	free(self->data);
+	self->data = NULL;
+	free(self);
+	self = NULL;
 }
 
 #endif // DSS_MEM_H

@@ -20,9 +20,9 @@ typedef struct
 	DSS_event_t *event_destroying;
 } DSS_env_t;
 
-bool DSS_env_commands_in_bounds(DSS_env_t *this)
+bool DSS_env_commands_in_bounds(DSS_env_t *self)
 {
-	if (this->defined_commands_n >= DSS_MAX_DEFINED_COMMANDS)
+	if (self->defined_commands_n >= DSS_MAX_DEFINED_COMMANDS)
 	{
 		return false;
 	}
@@ -30,7 +30,7 @@ bool DSS_env_commands_in_bounds(DSS_env_t *this)
 	return true;
 }
 
-void DSS_env_exec(DSS_env_t *this, char *what)
+void DSS_env_exec(DSS_env_t *self, char *what)
 {
 	char **lines = DSS_string_parse(what, "\n", false);
 
@@ -46,9 +46,9 @@ void DSS_env_exec(DSS_env_t *this, char *what)
 
 		char *id = strdup(tokens[0]);
 
-		for (DSS_command_t **iter = this->defined_commands; iter < (this->defined_commands + this->defined_commands_n); ++iter)
+		for (DSS_command_t **iter = self->defined_commands; iter < (self->defined_commands + self->defined_commands_n); ++iter)
 		{
-			DSS_command_match_call(*iter, id, this->mem, n_tokens - 1, tokens + 1);
+			DSS_command_match_call(*iter, id, self->mem, n_tokens - 1, tokens + 1);
 
 			// TODO: error handling function
 		}
@@ -66,51 +66,51 @@ void DSS_env_exec(DSS_env_t *this, char *what)
 	DSS_string_array_destroy(lines);
 }
 
-void DSS_env_define_command(DSS_env_t *this, char *id, DSS_command_funcptr_t func)
+void DSS_env_define_command(DSS_env_t *self, char *id, DSS_command_funcptr_t func)
 {
-	if (DSS_env_commands_in_bounds(this) == false)
+	if (DSS_env_commands_in_bounds(self) == false)
 	{
 		perror("DSS_env_define_command() commands out of bounds; too many commands defined.\n");
 		return;
 	}
 
 	DSS_command_t *new_command = DSS_command_create(id, func);
-	this->defined_commands[this->defined_commands_n] = new_command;
-	++this->defined_commands_n;
+	self->defined_commands[self->defined_commands_n] = new_command;
+	++self->defined_commands_n;
 }
 
 DSS_env_t *DSS_env_create(void)
 {
-	DSS_env_t *this = (DSS_env_t *)malloc(sizeof(DSS_env_t));
-	this->defined_commands = (DSS_command_t **)malloc(sizeof(DSS_command_t) * DSS_MAX_DEFINED_COMMANDS);
-	this->defined_commands_n = 0;
+	DSS_env_t *self = (DSS_env_t *)malloc(sizeof(DSS_env_t));
+	self->defined_commands = (DSS_command_t **)malloc(sizeof(DSS_command_t) * DSS_MAX_DEFINED_COMMANDS);
+	self->defined_commands_n = 0;
 
-	this->mem = DSS_mem_create();
+	self->mem = DSS_mem_create();
 
-	this->event_destroying = DSS_event_create();
+	self->event_destroying = DSS_event_create();
 
-	return this;
+	return self;
 }
 
-void DSS_env_destroy(DSS_env_t *this)
+void DSS_env_destroy(DSS_env_t *self)
 {
 	// (Handled on the same thread and procedurally, thus memory-safe)
-	DSS_event_fire(this->event_destroying, this);
+	DSS_event_fire(self->event_destroying, self);
 
-	for (DSS_command_t **iter = this->defined_commands; iter < (this->defined_commands + this->defined_commands_n); ++iter)
+	for (DSS_command_t **iter = self->defined_commands; iter < (self->defined_commands + self->defined_commands_n); ++iter)
 	{
 		DSS_command_destroy(*iter);
 	}
 
-	DSS_mem_destroy(this->mem);
+	DSS_mem_destroy(self->mem);
 
-	free(this->defined_commands);
-	this->defined_commands = NULL;
+	free(self->defined_commands);
+	self->defined_commands = NULL;
 
-	DSS_event_destroy(this->event_destroying);
-	this->event_destroying = NULL;
-	free(this);
-	this = NULL;
+	DSS_event_destroy(self->event_destroying);
+	self->event_destroying = NULL;
+	free(self);
+	self = NULL;
 }
 
 #endif // DSS_ENV_H

@@ -12,25 +12,25 @@ typedef struct
 } DSS_mempair_t;
 
 /// Will allocate a copy of the `key` argument.
-void DSS_mempair_fill_key(DSS_mempair_t *this, const char *key) { this->key = strdup(key); }
+void DSS_mempair_fill_key(DSS_mempair_t *self, const char *key) { self->key = strdup(key); }
 
 DSS_mempair_t *DSS_mempair_create(char *key, void *pair, int pair_len)
 {
-	DSS_mempair_t *this = (DSS_mempair_t *)malloc(sizeof(DSS_mempair_t));
-	this->key = strdup(key);
-	this->pair = pair;
-	this->pair_len = pair_len;
+	DSS_mempair_t *self = (DSS_mempair_t *)malloc(sizeof(DSS_mempair_t));
+	self->key = strdup(key);
+	self->pair = pair;
+	self->pair_len = pair_len;
 
-	return this;
+	return self;
 }
 
 /// Does not free the pair data. This should not be called directly.
-void DSS_mempair_destroy(DSS_mempair_t *this)
+void DSS_mempair_destroy(DSS_mempair_t *self)
 {
-	free(this->key);
-	this->key = NULL;
-	free(this);
-	this = NULL;
+	free(self->key);
+	self->key = NULL;
+	free(self);
+	self = NULL;
 }
 
 #endif // DSS_MEMPAIR_H
