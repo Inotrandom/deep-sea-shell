@@ -66,7 +66,7 @@ void DSS_env_exec(DSS_env_t *self, char *what)
 	DSS_string_array_destroy(lines);
 }
 
-void DSS_env_define_command(DSS_env_t *self, char *id, DSS_command_funcptr_t func)
+void DSS_env_define_command(DSS_env_t *self, const char *id, DSS_command_funcptr_t func)
 {
 	if (DSS_env_commands_in_bounds(self) == false)
 	{
